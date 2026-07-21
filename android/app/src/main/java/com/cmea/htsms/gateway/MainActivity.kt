@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
 import android.view.ViewGroup
@@ -50,13 +51,13 @@ class MainActivity : AppCompatActivity() {
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(48, 64, 48, 48)
             setBackgroundColor(Color.rgb(244, 242, 235))
-            addView(TextView(context).apply { text = "HTSMS"; textSize = 28f; setTextColor(Color.rgb(16, 35, 29)); setTypeface(typeface, 1) })
-            addView(status = TextView(context).apply { textSize = 22f; gravity = Gravity.CENTER; setPadding(0, 55, 0, 10); setTextColor(Color.rgb(16, 35, 29)) })
-            addView(detail = TextView(context).apply { textSize = 13f; gravity = Gravity.CENTER; setTextColor(Color.rgb(100, 115, 109)); setPadding(0, 0, 0, 28) })
-            addView(label("Gateway address")); addView(apiUrl = input(BuildConfig.DEFAULT_API_URL))
-            addView(label("Phone name")); addView(name = input("Office Gateway"))
-            addView(label("One-time pairing code")); addView(token = input("htsms_pair_…"))
-            addView(pair = Button(context).apply { text = "Pair this phone"; isAllCaps = false; setTextColor(Color.WHITE); setBackgroundColor(Color.rgb(16, 35, 29)); setPadding(20, 15, 20, 15); layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = 25 } })
+            addView(TextView(context).apply { text = "HTSMS"; textSize = 28f; setTextColor(Color.rgb(16, 35, 29)); setTypeface(typeface, Typeface.BOLD) })
+            addView(TextView(context).apply { textSize = 22f; gravity = Gravity.CENTER; setPadding(0, 55, 0, 10); setTextColor(Color.rgb(16, 35, 29)) }.also { status = it })
+            addView(TextView(context).apply { textSize = 13f; gravity = Gravity.CENTER; setTextColor(Color.rgb(100, 115, 109)); setPadding(0, 0, 0, 28) }.also { detail = it })
+            addView(label("Gateway address")); addView(input(BuildConfig.DEFAULT_API_URL).also { apiUrl = it })
+            addView(label("Phone name")); addView(input("Office Gateway").also { name = it })
+            addView(label("One-time pairing code")); addView(input("htsms_pair_…").also { token = it })
+            addView(Button(context).apply { text = "Pair this phone"; isAllCaps = false; setTextColor(Color.WHITE); setBackgroundColor(Color.rgb(16, 35, 29)); setPadding(20, 15, 20, 15); layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = 25 } }.also { pair = it })
             addView(TextView(context).apply { text = "HTSMS stores the phone credential using Android Keystore. Message content and secrets are never written to logs."; textSize = 10f; gravity = Gravity.CENTER; setTextColor(Color.rgb(100, 115, 109)); setPadding(10, 28, 10, 0) })
         }
     }

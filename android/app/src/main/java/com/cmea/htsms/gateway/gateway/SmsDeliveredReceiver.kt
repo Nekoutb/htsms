@@ -18,9 +18,9 @@ class SmsDeliveredReceiver : BroadcastReceiver() {
                 val state = context.getSharedPreferences("htsms_multipart", Context.MODE_PRIVATE)
                 val completed = synchronized(state) {
                     val key = "delivered_$messageId"
-                    val next = state.getInt(key, 0) + 1
-                    if (next >= partCount) state.edit().remove(key).apply() else state.edit().putInt(key, next).apply()
-                    next >= partCount
+                    val progress = MultipartProgress.advance(state.getInt(key, 0), partCount)
+                    if (progress.complete) state.edit().remove(key).apply() else state.edit().putInt(key, progress.storedCount).apply()
+                    progress.complete
                 }
                 if (completed) GatewayApi(context).status(messageId, "delivered")
             } finally { pending.finish() }

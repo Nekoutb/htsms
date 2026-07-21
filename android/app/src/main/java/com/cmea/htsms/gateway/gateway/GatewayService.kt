@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.os.BatteryManager
+import android.os.Build
 import android.os.IBinder
 import android.telephony.SmsManager
 import androidx.core.app.ActivityCompat
@@ -78,7 +79,12 @@ class GatewayService : Service() {
             return
         }
         api.status(message.id, "dispatched")
-        val manager = getSystemService(SmsManager::class.java).createForSubscriptionId(subscription.subscriptionId)
+        val manager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            getSystemService(SmsManager::class.java).createForSubscriptionId(subscription.subscriptionId)
+        } else {
+            @Suppress("DEPRECATION")
+            SmsManager.getSmsManagerForSubscriptionId(subscription.subscriptionId)
+        }
         val parts = manager.divideMessage(message.content)
         if (parts.size == 1) {
             val sent = callback(SmsSentReceiver::class.java, "HTSMS_SMS_SENT", message.id, 0, 1)

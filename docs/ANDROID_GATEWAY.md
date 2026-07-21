@@ -12,4 +12,6 @@ HTSMS uses a business-owned Android phone and SIM as the carrier gateway. The ba
 
 Pairing codes expire in ten minutes and work once. Credentials use Android Keystore. Revocation is immediate. Inbound SMS is reconstructed, given a stable event ID, encrypted while offline, and uploaded idempotently.
 
+The verified build gate is `gradlew testDebugUnitTest assembleDebug lintDebug assembleRelease`. Release output is intentionally unsigned: generate and protect the production signing key outside the repository, then record the signed APK checksum and signing-certificate fingerprint before distribution.
+
 Do not use rooted phones, shared personal devices, or devices without screen lock. Never send credentials or pairing codes through ordinary chat/email.
