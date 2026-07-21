@@ -1,0 +1,10 @@
+services:
+  nginx:
+    ports:
+      - "127.0.0.1:${HTSMS_HTTP_PORT:-8085}:80"
+
+  # The host's existing Caddy terminates TLS and proxies to the local Nginx
+  # port above. Assigning a profile prevents this bundled proxy from starting
+  # when the override is used without --profile bundled-proxy.
+  caddy:
+    profiles: [bundled-proxy]

@@ -21,6 +21,32 @@ This runbook deploys the proprietary HTSMS stack at `https://htsms.cm-ea.com` us
 7. Confirm `curl --fail https://htsms.cm-ea.com/health/ready` returns `{"status":"ready"}`.
 8. Execute registration, verification, workspace, pairing, API-key, test-message, inbound, and webhook smoke tests.
 
+## Deployment behind an existing host Caddy
+
+Use this mode when the host already has Caddy or another HTTPS reverse proxy on ports 80 and 443. The override publishes HTSMS Nginx only on the host loopback interface and prevents the bundled Caddy service from starting:
+
+```bash
+docker compose \
+  --env-file .env.production \
+  -f compose.production.yml \
+  -f compose.external-caddy.yml \
+  up -d
+```
+
+The default local endpoint is `127.0.0.1:8085`. It may be changed with `HTSMS_HTTP_PORT`, but it must remain bound to `127.0.0.1` rather than a public interface. Configure the host Caddy with:
+
+```caddy
+htsms.cm-ea.com {
+    reverse_proxy 127.0.0.1:8085
+    encode zstd gzip
+    header {
+        -Server
+    }
+}
+```
+
+Before reloading Caddy, validate the complete host configuration. Keep the Cloudflare DNS record in DNS-only mode until Caddy has obtained a valid certificate and both the HTTPS homepage and `/health/ready` work directly. Then select Cloudflare Full (strict) and enable the proxy.
+
 The application service runs migrations before serving. Queue and scheduler services wait for PostgreSQL and Redis health.
 
 Merges to `main` publish `ghcr.io/nekoutb/htsms:sha-<full-commit-sha>` and `latest`; version tags such as `v1.0.0` also publish that version. Production should pin the immutable SHA tag after its release checks pass.
