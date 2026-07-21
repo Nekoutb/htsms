@@ -56,6 +56,16 @@ htsms.cm-ea.com {
 
 Before reloading Caddy, validate the complete host configuration. Keep the Cloudflare DNS record in DNS-only mode until Caddy has obtained a valid certificate and both the HTTPS homepage and `/health/ready` work directly. Then select Cloudflare Full (strict) and enable the proxy.
 
+For a host using system Nginx and Certbot instead of Caddy, install `nginx-host.conf.example` as a site, validate and reload Nginx, and then request the certificate:
+
+```bash
+sudo cp nginx-host.conf.example /etc/nginx/sites-available/htsms
+sudo ln -s /etc/nginx/sites-available/htsms /etc/nginx/sites-enabled/htsms
+sudo nginx -t
+sudo systemctl reload nginx
+sudo certbot --nginx --non-interactive --redirect -d htsms.cm-ea.com
+```
+
 The application service runs migrations before serving. Queue and scheduler services wait for PostgreSQL and Redis health.
 
 Merges to `main` publish `ghcr.io/nekoutb/htsms:sha-<full-commit-sha>` and `latest`; version tags such as `v1.0.0` also publish that version. Production should pin the immutable SHA tag after its release checks pass.
