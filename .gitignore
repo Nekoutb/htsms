@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!deploy/.env.production.example
 backend/.env
 
 # PHP dependencies and generated files
@@ -30,4 +31,3 @@ coverage/
 .vscode/
 .DS_Store
 Thumbs.db
-

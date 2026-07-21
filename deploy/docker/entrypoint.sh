@@ -13,4 +13,11 @@ fi
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-exec su-exec www-data "$@"
+
+# The official PHP-FPM image starts its master process as root so it can open
+# container log descriptors and then drops pool workers to www-data. CLI
+# workers do not need those master-process privileges and run as www-data.
+case "$1" in
+  php-fpm|php-fpm*) exec "$@" ;;
+  *) exec su-exec www-data "$@" ;;
+esac

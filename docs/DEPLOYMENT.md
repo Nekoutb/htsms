@@ -21,6 +21,15 @@ This runbook deploys the proprietary HTSMS stack at `https://htsms.cm-ea.com` us
 7. Confirm `curl --fail https://htsms.cm-ea.com/health/ready` returns `{"status":"ready"}`.
 8. Execute registration, verification, workspace, pairing, API-key, test-message, inbound, and webhook smoke tests.
 
+For a new self-hosted installation, `bootstrap-production-env.sh` can create the file with generated application, PostgreSQL, and Redis secrets. It refuses to overwrite a non-empty environment:
+
+```bash
+cd deploy
+HTSMS_BOOTSTRAP_IMAGE=htsms:release-tag ./bootstrap-production-env.sh
+```
+
+The bootstrap defaults email to the local log transport. Replace it with approved SMTP settings and validate delivery before allowing external registration or administrative MFA.
+
 ## Deployment behind an existing host Caddy
 
 Use this mode when the host already has Caddy or another HTTPS reverse proxy on ports 80 and 443. The override publishes HTSMS Nginx only on the host loopback interface and prevents the bundled Caddy service from starting:
