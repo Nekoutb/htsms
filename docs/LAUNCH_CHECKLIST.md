@@ -2,6 +2,12 @@
 
 This checklist distinguishes the completed engineering MVP from the external gates required before selling HTSMS as a production service at `htsms.cm-ea.com`.
 
+## Verified external state (2026-07-21)
+
+- `htsms.cm-ea.com` has public Cloudflare A and AAAA records, but its HTTPS endpoint returns Cloudflare status `525`; the origin TLS connection must be provisioned or repaired before deployment validation.
+- GitHub Actions are enabled and both repository workflows are active. Automatic and manual quality-gate runs are accepted, then terminate with `startup_failure` before creating any jobs. The repository workflow has been ruled out as the execution point; the owner must check the account's Actions billing/minutes and restrictions.
+- No production deployment, signed Android release, payment credentials, physical carrier acceptance evidence, legal approval, or independent penetration-test report is stored in the repository.
+
 ## Engineering acceptance completed
 
 - [x] Multi-tenant Laravel API and customer portal
