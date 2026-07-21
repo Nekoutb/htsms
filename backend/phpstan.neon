@@ -7,4 +7,3 @@ parameters:
     level: 9
     tmpDir: storage/framework/cache/phpstan
     checkModelProperties: true
-
