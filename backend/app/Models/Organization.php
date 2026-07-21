@@ -4,13 +4,22 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Database\Factories\OrganizationFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property string $id
+ * @property string $name
+ * @property string $slug
+ * @property CarbonImmutable|null $sending_paused_at
+ * @property CarbonImmutable|null $suspended_at
+ */
 final class Organization extends Model
 {
     /** @use HasFactory<OrganizationFactory> */
@@ -23,6 +32,12 @@ final class Organization extends Model
         'timezone',
         'locale',
     ];
+
+    /** @return array<string, string> */
+    protected function casts(): array
+    {
+        return ['sending_paused_at' => 'immutable_datetime', 'suspended_at' => 'immutable_datetime'];
+    }
 
     /**
      * @return HasMany<OrganizationMembership, $this>
@@ -72,6 +87,18 @@ final class Organization extends Model
     public function webhookEndpoints(): HasMany
     {
         return $this->hasMany(WebhookEndpoint::class);
+    }
+
+    /** @return HasOne<Subscription, $this> */
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class);
+    }
+
+    /** @return HasMany<SubscriptionChangeRequest, $this> */
+    public function subscriptionChangeRequests(): HasMany
+    {
+        return $this->hasMany(SubscriptionChangeRequest::class);
     }
 
     /**

@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Services\Gateway\DevicePairingService;
 use App\Services\Identity\OrganizationService;
 use App\Services\Integration\DeveloperApiKeyService;
+use App\Services\Messaging\MessageSubmissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -69,18 +70,14 @@ final class PortalController extends Controller
         ]);
     }
 
-    public function send(StoreMessageRequest $request, Organization $organization): RedirectResponse
+    public function send(StoreMessageRequest $request, Organization $organization, MessageSubmissionService $submissions): RedirectResponse
     {
         $this->authorize('view', $organization);
         $scheduledAt = $request->date('send_at');
-        $message = $organization->messages()->create([
-            'recipient' => $request->string('to')->toString(),
-            'body' => $request->string('content')->toString(),
-            'status' => $scheduledAt === null ? MessageStatus::Queued : MessageStatus::Scheduled,
-            'scheduled_at' => $scheduledAt,
-            'expires_at' => $request->date('expires_at'),
-        ]);
-        $message->events()->create(['to_status' => $message->status->value, 'source' => 'dashboard']);
+        $submissions->submit(
+            $organization, $request->string('to')->toString(), $request->string('content')->toString(),
+            $scheduledAt, $request->date('expires_at'), null, 'dashboard',
+        );
 
         return redirect()->route('portal.messages', $organization)->with('status', 'Message accepted for delivery.');
     }

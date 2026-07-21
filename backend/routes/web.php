@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Web\BillingController;
+use App\Http\Controllers\Web\PlatformAdminController;
 use App\Http\Controllers\Web\PortalController;
 use App\Http\Controllers\Web\WebAuthenticationController;
 use Illuminate\Support\Facades\Route;
@@ -25,4 +27,14 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/app/{organization}/developer', [PortalController::class, 'developer'])->name('portal.developer');
     Route::post('/app/{organization}/developer/api-keys', [PortalController::class, 'createApiKey'])->name('portal.api-keys.store');
     Route::delete('/app/{organization}/developer/api-keys/{apiKey}', [PortalController::class, 'revokeApiKey'])->name('portal.api-keys.revoke');
+    Route::get('/app/{organization}/billing', [BillingController::class, 'show'])->name('portal.billing');
+    Route::post('/app/{organization}/billing/requests', [BillingController::class, 'requestChange'])->name('portal.billing.request');
+});
+
+Route::prefix('admin')->middleware(['auth', 'verified', 'platform-admin'])->group(function (): void {
+    Route::get('/', [PlatformAdminController::class, 'index'])->name('admin.index');
+    Route::post('/subscription-requests/{changeRequest}/approve', [PlatformAdminController::class, 'approve'])->name('admin.requests.approve');
+    Route::post('/subscription-requests/{changeRequest}/reject', [PlatformAdminController::class, 'reject'])->name('admin.requests.reject');
+    Route::post('/organizations/{organization}/pause', [PlatformAdminController::class, 'pause'])->name('admin.organizations.pause');
+    Route::post('/organizations/{organization}/suspend', [PlatformAdminController::class, 'suspend'])->name('admin.organizations.suspend');
 });

@@ -19,6 +19,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $email
  * @property string $password
  * @property CarbonImmutable|null $email_verified_at
+ * @property bool $is_platform_admin
  */
 final class User extends Authenticatable implements MustVerifyEmailContract
 {
@@ -74,6 +75,7 @@ final class User extends Authenticatable implements MustVerifyEmailContract
         return [
             'email_verified_at' => 'immutable_datetime',
             'password' => 'hashed',
+            'is_platform_admin' => 'boolean',
         ];
     }
 }

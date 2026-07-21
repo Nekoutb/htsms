@@ -8,10 +8,13 @@ use App\Domain\Identity\OrganizationRole;
 use App\DTO\Identity\CreateOrganizationData;
 use App\Models\Organization;
 use App\Models\User;
+use App\Services\Billing\SubscriptionService;
 use Illuminate\Support\Facades\DB;
 
 final readonly class OrganizationService
 {
+    public function __construct(private SubscriptionService $subscriptions) {}
+
     public function createForOwner(CreateOrganizationData $data, User $owner): Organization
     {
         return DB::transaction(function () use ($data, $owner): Organization {
@@ -27,6 +30,7 @@ final readonly class OrganizationService
                 'role' => OrganizationRole::Owner,
                 'joined_at' => now(),
             ]);
+            $this->subscriptions->createTrial($organization);
 
             return $organization;
         });

@@ -9,12 +9,15 @@ use App\DTO\Gateway\PairedDevice;
 use App\Models\DevicePairingChallenge;
 use App\Models\Organization;
 use App\Models\User;
+use App\Services\Billing\SubscriptionService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 final readonly class DevicePairingService
 {
+    public function __construct(private SubscriptionService $subscriptions) {}
+
     public function createChallenge(Organization $organization, User $creator): IssuedPairingChallenge
     {
         $plainTextToken = 'htsms_pair_'.bin2hex(random_bytes(32));
@@ -45,6 +48,7 @@ final readonly class DevicePairingService
             }
 
             $organization = Organization::query()->findOrFail($challenge->organization_id);
+            $this->subscriptions->ensureDeviceAvailable($organization);
             $device = $organization->devices()->create([
                 'name' => $data['name'],
                 'manufacturer' => $data['manufacturer'],
