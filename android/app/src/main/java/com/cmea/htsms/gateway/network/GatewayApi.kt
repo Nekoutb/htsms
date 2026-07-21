@@ -55,6 +55,10 @@ class GatewayApi(private val context: Context) {
         request("POST", "/api/v1/device/messages/$messageId/status", body)
     }
 
+    fun inbound(payload: JSONObject) {
+        request("POST", "/api/v1/device/inbound-messages", payload)
+    }
+
     private fun request(method: String, path: String, body: JSONObject, authenticated: Boolean = true): JSONObject {
         val connection = URL(preferences.apiUrl + path).openConnection() as HttpURLConnection
         try {

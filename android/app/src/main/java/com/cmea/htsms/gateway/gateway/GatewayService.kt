@@ -15,6 +15,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import com.cmea.htsms.gateway.MainActivity
 import com.cmea.htsms.gateway.data.GatewayPreferences
+import com.cmea.htsms.gateway.data.PendingInboundStore
 import com.cmea.htsms.gateway.data.SimRepository
 import com.cmea.htsms.gateway.network.GatewayApi
 import com.cmea.htsms.gateway.network.LeasedMessage
@@ -52,9 +53,18 @@ class GatewayService : Service() {
                     heartbeatCountdown = 6
                 }
                 api.lease()?.let { dispatch(it, api) }
+                flushInbound(api)
             } catch (_: Exception) { /* Network errors retry without logging message contents or credentials. */ }
             heartbeatCountdown--
             try { Thread.sleep(10_000) } catch (_: InterruptedException) { return }
+        }
+    }
+
+    private fun flushInbound(api: GatewayApi) {
+        val store = PendingInboundStore(this)
+        store.pending().forEach { (eventId, payload) ->
+            api.inbound(payload)
+            store.remove(eventId)
         }
     }
 

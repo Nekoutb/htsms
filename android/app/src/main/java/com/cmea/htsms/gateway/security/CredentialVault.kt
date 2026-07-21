@@ -15,25 +15,30 @@ class CredentialVault(private val context: Context) {
     private val alias = "htsms_device_credential"
 
     fun store(credential: String) {
-        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        cipher.init(Cipher.ENCRYPT_MODE, key())
-        preferences.edit()
-            .putString("credential", Base64.encodeToString(cipher.doFinal(credential.toByteArray()), Base64.NO_WRAP))
-            .putString("iv", Base64.encodeToString(cipher.iv, Base64.NO_WRAP))
-            .apply()
+        preferences.edit().putString("credential", encrypt(credential)).apply()
     }
 
     fun read(): String? {
-        val encrypted = preferences.getString("credential", null) ?: return null
-        val iv = preferences.getString("iv", null) ?: return null
-        return runCatching {
-            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-            cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, Base64.decode(iv, Base64.NO_WRAP)))
-            String(cipher.doFinal(Base64.decode(encrypted, Base64.NO_WRAP)))
-        }.getOrNull()
+        return preferences.getString("credential", null)?.let(::decrypt)
     }
 
     fun clear() = preferences.edit().clear().apply()
+
+    fun encrypt(value: String): String {
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.ENCRYPT_MODE, key())
+        val encrypted = Base64.encodeToString(cipher.doFinal(value.toByteArray()), Base64.NO_WRAP)
+        val iv = Base64.encodeToString(cipher.iv, Base64.NO_WRAP)
+        return "$iv:$encrypted"
+    }
+
+    fun decrypt(value: String): String? = runCatching {
+        val pieces = value.split(':', limit = 2)
+        require(pieces.size == 2)
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, Base64.decode(pieces[0], Base64.NO_WRAP)))
+        String(cipher.doFinal(Base64.decode(pieces[1], Base64.NO_WRAP)))
+    }.getOrNull()
 
     private fun key(): SecretKey {
         val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }

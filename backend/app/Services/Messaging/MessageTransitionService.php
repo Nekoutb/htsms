@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Services\Messaging;
 
+use App\Domain\Integration\WebhookEvent;
 use App\Domain\Messaging\MessageStatus;
 use App\Models\Message;
+use App\Services\Integration\WebhookDispatcher;
 use DomainException;
 
 final class MessageTransitionService
 {
+    public function __construct(private readonly WebhookDispatcher $webhooks) {}
+
     /** @param array<string, bool|int|string|null> $metadata */
     public function transition(Message $message, MessageStatus $next, string $source, array $metadata = []): Message
     {
@@ -35,6 +39,21 @@ final class MessageTransitionService
             'source' => $source,
             'metadata' => $metadata,
         ]);
+
+        $event = match ($next) {
+            MessageStatus::Sent => WebhookEvent::MessageSent,
+            MessageStatus::Delivered => WebhookEvent::MessageDelivered,
+            MessageStatus::Failed => WebhookEvent::MessageFailed,
+            MessageStatus::Expired => WebhookEvent::MessageExpired,
+            default => null,
+        };
+        if ($event !== null) {
+            $organization = $message->organization()->firstOrFail();
+            $this->webhooks->dispatch($organization, $event, [
+                'id' => $message->id, 'to' => $message->recipient, 'content' => $message->body,
+                'status' => $message->status->value, 'failure_code' => $message->failure_code,
+            ]);
+        }
 
         return $message->refresh();
     }

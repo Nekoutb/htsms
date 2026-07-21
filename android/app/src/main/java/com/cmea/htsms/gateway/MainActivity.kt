@@ -114,6 +114,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private val REQUIRED = buildList {
             add(Manifest.permission.READ_PHONE_STATE); add(Manifest.permission.READ_PHONE_NUMBERS); add(Manifest.permission.SEND_SMS)
+            add(Manifest.permission.RECEIVE_SMS)
             if (android.os.Build.VERSION.SDK_INT >= 33) add(Manifest.permission.POST_NOTIFICATIONS)
         }.toTypedArray()
     }

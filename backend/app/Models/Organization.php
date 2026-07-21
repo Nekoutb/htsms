@@ -62,6 +62,18 @@ final class Organization extends Model
         return $this->hasMany(Message::class);
     }
 
+    /** @return HasMany<InboundMessage, $this> */
+    public function inboundMessages(): HasMany
+    {
+        return $this->hasMany(InboundMessage::class);
+    }
+
+    /** @return HasMany<WebhookEndpoint, $this> */
+    public function webhookEndpoints(): HasMany
+    {
+        return $this->hasMany(WebhookEndpoint::class);
+    }
+
     /**
      * @return BelongsToMany<User, $this>
      */
