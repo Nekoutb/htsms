@@ -1,0 +1,14 @@
+.git
+.github
+backend/.env
+backend/vendor
+backend/node_modules
+backend/public/build
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+android/.gradle
+android/**/build
+threadline-sku-generator
+*.docx

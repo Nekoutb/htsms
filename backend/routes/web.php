@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HealthController;
 use App\Http\Controllers\Web\BillingController;
 use App\Http\Controllers\Web\PlatformAdminController;
 use App\Http\Controllers\Web\PortalController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\Web\WebAuthenticationController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+Route::get('/health/ready', HealthController::class)->middleware('throttle:30,1');
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [WebAuthenticationController::class, 'loginForm'])->name('login');
     Route::post('/login', [WebAuthenticationController::class, 'login'])->middleware('throttle:auth-login');

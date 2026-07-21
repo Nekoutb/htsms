@@ -1,0 +1,11 @@
+htsms.cm-ea.com {
+    encode zstd gzip
+    reverse_proxy nginx:80
+    header {
+        -Server
+    }
+    log {
+        output stdout
+        format json
+    }
+}

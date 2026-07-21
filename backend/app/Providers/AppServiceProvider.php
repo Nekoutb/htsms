@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\DeveloperApiKey;
 use App\Models\Device;
 use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use RuntimeException;
 
@@ -34,12 +36,20 @@ final class AppServiceProvider extends ServiceProvider
         }
 
         Model::preventLazyLoading(! $this->app->isProduction());
+        if ($this->app->isProduction()) {
+            URL::forceScheme('https');
+        }
 
         RateLimiter::for('api', static function (Request $request): Limit {
             $user = $request->user();
-            $identity = $user instanceof User
-                ? 'user:'.$user->email
-                : 'ip:'.($request->ip() ?? 'unknown');
+            $apiKey = $request->attributes->get('developer_api_key');
+            $device = $request->attributes->get('device');
+            $identity = match (true) {
+                $user instanceof User => 'user:'.$user->email,
+                $apiKey instanceof DeveloperApiKey => 'api-key:'.$apiKey->id,
+                $device instanceof Device => 'device:'.$device->id,
+                default => 'ip:'.($request->ip() ?? 'unknown'),
+            };
 
             return Limit::perMinute(120)->by($identity);
         });
