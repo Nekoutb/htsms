@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Domain\Identity\OrganizationRole;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property OrganizationRole $role
+ * @property CarbonImmutable $joined_at
+ */
 final class OrganizationMembership extends Model
 {
     use HasUlids;

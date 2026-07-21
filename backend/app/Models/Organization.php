@@ -33,6 +33,14 @@ final class Organization extends Model
     }
 
     /**
+     * @return HasMany<DeveloperApiKey, $this>
+     */
+    public function developerApiKeys(): HasMany
+    {
+        return $this->hasMany(DeveloperApiKey::class);
+    }
+
+    /**
      * @return BelongsToMany<User, $this>
      */
     public function users(): BelongsToMany
