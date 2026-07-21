@@ -1,0 +1,1 @@
+<resources><style name="Theme.HTSMS" parent="Theme.MaterialComponents.DayNight.NoActionBar"><item name="colorPrimary">@color/htsms_green</item><item name="colorSecondary">@color/htsms_lime</item><item name="android:fontFamily">sans</item><item name="android:navigationBarColor">@color/htsms_ink</item><item name="android:statusBarColor">@color/htsms_ink</item></style></resources>
