@@ -56,6 +56,12 @@ final class Organization extends Model
         return $this->hasMany(DevicePairingChallenge::class);
     }
 
+    /** @return HasMany<Message, $this> */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class);
+    }
+
     /**
      * @return BelongsToMany<User, $this>
      */

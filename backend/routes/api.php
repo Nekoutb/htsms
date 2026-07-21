@@ -5,8 +5,10 @@ use App\Http\Controllers\Api\V1\DeveloperApiKeyContextController;
 use App\Http\Controllers\Api\V1\DeveloperApiKeyController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\DeviceHeartbeatController;
+use App\Http\Controllers\Api\V1\DeviceMessageController;
 use App\Http\Controllers\Api\V1\DevicePairingController;
 use App\Http\Controllers\Api\V1\EmailVerificationController;
+use App\Http\Controllers\Api\V1\MessageController;
 use App\Http\Controllers\Api\V1\OrganizationController;
 use App\Http\Controllers\Api\V1\PasswordController;
 use Illuminate\Support\Facades\Route;
@@ -53,6 +55,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
 Route::prefix('v1')->middleware(['developer-api-key', 'throttle:api'])->group(function (): void {
     Route::get('/api-key', DeveloperApiKeyContextController::class)
         ->middleware('developer-ability:messages:read');
+    Route::get('/messages', [MessageController::class, 'index'])
+        ->middleware('developer-ability:messages:read');
+    Route::post('/messages', [MessageController::class, 'store'])
+        ->middleware('developer-ability:messages:write');
 });
 
 Route::post('/v1/device/pair', [DevicePairingController::class, 'pair'])
@@ -60,3 +66,8 @@ Route::post('/v1/device/pair', [DevicePairingController::class, 'pair'])
 
 Route::post('/v1/device/heartbeat', DeviceHeartbeatController::class)
     ->middleware(['device-auth', 'throttle:device-heartbeat']);
+
+Route::prefix('v1/device')->middleware(['device-auth', 'throttle:api'])->group(function (): void {
+    Route::post('/messages/lease', [DeviceMessageController::class, 'lease']);
+    Route::post('/messages/{message}/status', [DeviceMessageController::class, 'update']);
+});
