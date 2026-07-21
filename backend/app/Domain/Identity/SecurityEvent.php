@@ -14,4 +14,7 @@ enum SecurityEvent: string
     case EmailVerified = 'identity.email_verified';
     case PasswordResetRequested = 'identity.password_reset_requested';
     case PasswordResetCompleted = 'identity.password_reset_completed';
+    case AdminMfaChallengeSent = 'identity.admin_mfa_challenge_sent';
+    case AdminMfaVerified = 'identity.admin_mfa_verified';
+    case AdminMfaFailed = 'identity.admin_mfa_failed';
 }

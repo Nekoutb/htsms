@@ -26,8 +26,8 @@ await page.getByRole('link', { name: 'Plan & billing' }).click();
 await page.getByText('Current subscription').waitFor();
 await page.screenshot({ path: `${output}/billing-desktop.png`, fullPage: true });
 await page.goto(`${baseUrl}/admin`, { waitUntil: 'networkidle' });
-await page.getByRole('heading', { name: 'Platform administration' }).waitFor();
-await page.screenshot({ path: `${output}/admin-desktop.png`, fullPage: true });
+await page.getByRole('heading', { name: 'Verify admin access' }).waitFor();
+await page.screenshot({ path: `${output}/admin-mfa-desktop.png`, fullPage: true });
 
 const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
 await mobile.goto(baseUrl, { waitUntil: 'networkidle' });
