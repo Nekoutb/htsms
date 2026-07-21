@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api\V1;
 
+use App\Models\Contact;
 use App\Models\Device;
 use App\Models\InboundMessage;
 use App\Models\Organization;
+use App\Models\Suppression;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -31,12 +33,50 @@ final class InboundMessageTest extends TestCase
         self::assertSame(1, InboundMessage::query()->count());
         self::assertSame($device->organization_id, InboundMessage::query()->sole()->organization_id);
         self::assertSame($sim->getKey(), InboundMessage::query()->sole()->device_sim_slot_id);
+        $this->assertDatabaseMissing('suppressions', ['organization_id' => $device->organization_id, 'phone' => '+237670000004']);
     }
 
     public function test_unknown_device_credential_is_rejected(): void
     {
         $this->withToken('htsms_device_unknown_'.str_repeat('0', 64))
             ->postJson('/api/v1/device/inbound-messages', [])->assertUnauthorized();
+    }
+
+    public function test_stop_keyword_immediately_suppresses_sender(): void
+    {
+        [$credential, $device] = $this->device();
+        Contact::query()->create([
+            'organization_id' => $device->organization_id,
+            'phone' => '+237670000099',
+            'consent_status' => 'consented',
+            'consent_source' => 'checkout',
+            'consented_at' => now(),
+        ]);
+
+        $payload = [
+            'device_event_id' => 'sms-stop-00000001',
+            'sender' => '+237670000099',
+            'content' => '  Arrêt! ',
+            'received_at' => now()->toIso8601String(),
+            'sim_slot_index' => 0,
+        ];
+        $this->withToken($credential)->postJson('/api/v1/device/inbound-messages', $payload)->assertCreated();
+
+        $this->assertDatabaseHas('suppressions', [
+            'organization_id' => $device->organization_id,
+            'phone' => '+237670000099',
+            'reason' => 'inbound_opt_out',
+        ]);
+        $this->assertDatabaseHas('contacts', [
+            'organization_id' => $device->organization_id,
+            'phone' => '+237670000099',
+            'consent_status' => 'opted_out',
+        ]);
+
+        Suppression::query()->delete();
+        Contact::query()->where('phone', '+237670000099')->update(['consent_status' => 'consented', 'opted_out_at' => null]);
+        $this->withToken($credential)->postJson('/api/v1/device/inbound-messages', $payload)->assertOk();
+        $this->assertDatabaseHas('suppressions', ['phone' => '+237670000099', 'reason' => 'inbound_opt_out']);
     }
 
     /** @return array{string, Device} */

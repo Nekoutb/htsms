@@ -18,6 +18,8 @@ Abilities include `messages:read`, `messages:write`, `contacts:read`, `contacts:
 
 Use `GET|POST /contacts` to manage consent-aware recipients and `GET|POST /campaigns` to launch a campaign. Campaigns accept 1-1,000 contact IDs. Only contacts with recorded consent and no organization suppression are queued; every excluded recipient remains in the campaign snapshot with its reason. Opt-outs are durable and are not cleared merely by changing the contact record.
 
+Inbound replies matching `STOP`, `UNSUBSCRIBE`, `CANCEL`, `END`, `QUIT`, `ARRET`, or `ARRÊT` (case-insensitive exact keywords) immediately suppress the sender and update a matching contact to opted out.
+
 ## Webhook verification
 
 Read `HTSMS-Event-ID`, `HTSMS-Event-Type`, `HTSMS-Timestamp`, and `HTSMS-Signature`. Compute `HMAC-SHA256(timestamp + "." + raw_body, signing_secret)` and constant-time compare it with the `v1=` signature. Reject stale timestamps and persist event IDs against replay. Return 2xx promptly.

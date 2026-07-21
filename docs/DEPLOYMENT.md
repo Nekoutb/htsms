@@ -23,6 +23,8 @@ This runbook deploys the proprietary HTSMS stack at `https://htsms.cm-ea.com` us
 
 The application service runs migrations before serving. Queue and scheduler services wait for PostgreSQL and Redis health.
 
+Merges to `main` publish `ghcr.io/nekoutb/htsms:sha-<full-commit-sha>` and `latest`; version tags such as `v1.0.0` also publish that version. Production should pin the immutable SHA tag after its release checks pass.
+
 ## Release, rollback, and recovery
 
 Before release, back up PostgreSQL and record the current image digest. Rehearse migrations in staging, then deploy the immutable image. Roll back to the previous digest. If a schema change is not backward-compatible, restore the pre-release backup into an isolated instance first; never run destructive rollback commands blindly in production.
