@@ -26,6 +26,13 @@ final class OrganizationPolicy
         ], true);
     }
 
+    public function manageDevices(User $user, Organization $organization): bool
+    {
+        $membership = $this->membership($user, $organization);
+
+        return $membership?->role?->canManageMembers() === true;
+    }
+
     private function membership(User $user, Organization $organization): ?OrganizationMembership
     {
         return OrganizationMembership::query()

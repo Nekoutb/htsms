@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\Device;
 use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -54,5 +55,15 @@ final class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('password-reset', static fn (Request $request): Limit => Limit::perHour(5)
             ->by($request->ip() ?? 'unknown'));
+
+        RateLimiter::for('device-pairing', static fn (Request $request): Limit => Limit::perMinute(10)
+            ->by($request->ip() ?? 'unknown'));
+
+        RateLimiter::for('device-heartbeat', static function (Request $request): Limit {
+            $device = $request->attributes->get('device');
+            $identity = $device instanceof Device ? $device->id : ($request->ip() ?? 'unknown');
+
+            return Limit::perMinute(12)->by($identity);
+        });
     }
 }

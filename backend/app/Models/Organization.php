@@ -41,6 +41,22 @@ final class Organization extends Model
     }
 
     /**
+     * @return HasMany<Device, $this>
+     */
+    public function devices(): HasMany
+    {
+        return $this->hasMany(Device::class);
+    }
+
+    /**
+     * @return HasMany<DevicePairingChallenge, $this>
+     */
+    public function devicePairingChallenges(): HasMany
+    {
+        return $this->hasMany(DevicePairingChallenge::class);
+    }
+
+    /**
      * @return BelongsToMany<User, $this>
      */
     public function users(): BelongsToMany

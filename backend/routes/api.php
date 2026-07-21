@@ -3,6 +3,9 @@
 use App\Http\Controllers\Api\V1\AuthenticationController;
 use App\Http\Controllers\Api\V1\DeveloperApiKeyContextController;
 use App\Http\Controllers\Api\V1\DeveloperApiKeyController;
+use App\Http\Controllers\Api\V1\DeviceController;
+use App\Http\Controllers\Api\V1\DeviceHeartbeatController;
+use App\Http\Controllers\Api\V1\DevicePairingController;
 use App\Http\Controllers\Api\V1\EmailVerificationController;
 use App\Http\Controllers\Api\V1\OrganizationController;
 use App\Http\Controllers\Api\V1\PasswordController;
@@ -38,9 +41,22 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
         ->middleware('abilities:api-keys:write');
     Route::delete('/organizations/{organization}/api-keys/{apiKey}', [DeveloperApiKeyController::class, 'revoke'])
         ->middleware('abilities:api-keys:write');
+
+    Route::get('/organizations/{organization}/devices', [DeviceController::class, 'index'])
+        ->middleware('abilities:devices:read');
+    Route::post('/organizations/{organization}/device-pairing-challenges', [DevicePairingController::class, 'challenge'])
+        ->middleware('abilities:devices:write');
+    Route::delete('/organizations/{organization}/devices/{device}', [DeviceController::class, 'revoke'])
+        ->middleware('abilities:devices:write');
 });
 
 Route::prefix('v1')->middleware(['developer-api-key', 'throttle:api'])->group(function (): void {
     Route::get('/api-key', DeveloperApiKeyContextController::class)
         ->middleware('developer-ability:messages:read');
 });
+
+Route::post('/v1/device/pair', [DevicePairingController::class, 'pair'])
+    ->middleware('throttle:device-pairing');
+
+Route::post('/v1/device/heartbeat', DeviceHeartbeatController::class)
+    ->middleware(['device-auth', 'throttle:device-heartbeat']);

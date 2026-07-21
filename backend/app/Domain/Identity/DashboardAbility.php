@@ -11,6 +11,8 @@ enum DashboardAbility: string
     case OrganizationsWrite = 'organizations:write';
     case ApiKeysRead = 'api-keys:read';
     case ApiKeysWrite = 'api-keys:write';
+    case DevicesRead = 'devices:read';
+    case DevicesWrite = 'devices:write';
 
     /**
      * @return list<string>

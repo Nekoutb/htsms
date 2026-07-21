@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AuthenticateDeveloperApiKey;
+use App\Http\Middleware\AuthenticateDevice;
 use App\Http\Middleware\RequireDeveloperApiKeyAbility;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'abilities' => CheckAbilities::class,
             'developer-api-key' => AuthenticateDeveloperApiKey::class,
             'developer-ability' => RequireDeveloperApiKeyAbility::class,
+            'device-auth' => AuthenticateDevice::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
