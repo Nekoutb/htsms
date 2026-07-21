@@ -1,0 +1,75 @@
+name: htsms
+x-app: &app
+  image: ${HTSMS_IMAGE:-ghcr.io/nekoutb/htsms:latest}
+  restart: unless-stopped
+  env_file: ${HTSMS_ENV_FILE:-.env.production}
+  depends_on:
+    postgres: { condition: service_healthy }
+    redis: { condition: service_healthy }
+  networks: [private]
+  volumes: ["public:/srv/public"]
+
+services:
+  app:
+    <<: *app
+    environment:
+      HTSMS_RUN_MIGRATIONS: "true"
+    healthcheck:
+      test: ["CMD", "php", "artisan", "about", "--only=environment"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  queue:
+    <<: *app
+    command: ["php", "artisan", "queue:work", "redis", "--queue=default", "--sleep=2", "--tries=3", "--timeout=90", "--max-time=3600"]
+  webhooks:
+    <<: *app
+    command: ["php", "artisan", "queue:work", "redis", "--queue=webhooks", "--sleep=2", "--tries=6", "--timeout=30", "--max-time=3600"]
+  scheduler:
+    <<: *app
+    command: ["php", "artisan", "schedule:work"]
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on: { app: { condition: service_healthy } }
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - public:/var/www/html/public:ro
+    networks: [private]
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on: [nginx]
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [private, public]
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-htsms}
+      POSTGRES_USER: ${DB_USERNAME:-htsms}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"], interval: 10s, timeout: 5s, retries: 10 }
+    networks: [private]
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD}"]
+    volumes: ["redis_data:/data"]
+    healthcheck: { test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"], interval: 10s, timeout: 5s, retries: 10 }
+    networks: [private]
+
+networks:
+  public: {}
+  private: { internal: true }
+volumes:
+  postgres_data: {}
+  redis_data: {}
+  caddy_data: {}
+  caddy_config: {}
+  public: {}
