@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthenticationController;
+use App\Http\Controllers\Api\V1\CampaignController;
+use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\DeveloperApiKeyContextController;
 use App\Http\Controllers\Api\V1\DeveloperApiKeyController;
 use App\Http\Controllers\Api\V1\DeviceController;
@@ -63,6 +65,14 @@ Route::prefix('v1')->middleware(['developer-api-key', 'throttle:api'])->group(fu
         ->middleware('developer-ability:messages:write');
     Route::get('/inbound-messages', [InboundMessageController::class, 'index'])
         ->middleware('developer-ability:messages:read');
+    Route::get('/contacts', [ContactController::class, 'index'])
+        ->middleware('developer-ability:contacts:read');
+    Route::post('/contacts', [ContactController::class, 'store'])
+        ->middleware('developer-ability:contacts:write');
+    Route::get('/campaigns', [CampaignController::class, 'index'])
+        ->middleware('developer-ability:campaigns:read');
+    Route::post('/campaigns', [CampaignController::class, 'store'])
+        ->middleware('developer-ability:campaigns:write');
     Route::get('/webhook-endpoints', [WebhookEndpointController::class, 'index'])
         ->middleware('developer-ability:webhooks:read');
     Route::post('/webhook-endpoints', [WebhookEndpointController::class, 'store'])

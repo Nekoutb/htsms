@@ -12,7 +12,11 @@ curl -X POST https://htsms.cm-ea.com/api/v1/messages \
 
 Use E.164 destinations. Reuse an idempotency key only for the same logical request; replay returns the original message without consuming allowance twice. Statuses include `scheduled`, `queued`, `assigned`, `dispatched`, `sent`, `delivered`, `retry_pending`, `failed`, `expired`, and `cancelled`.
 
-Abilities include `messages:read`, `messages:write`, `webhooks:read`, and `webhooks:write`. Common errors: 401 invalid credential, 403 missing ability, 402 subscription restriction, 404 hidden/missing resource, 409 invalid state, 422 invalid input, 429 rate limit.
+Abilities include `messages:read`, `messages:write`, `contacts:read`, `contacts:write`, `campaigns:read`, `campaigns:write`, `webhooks:read`, and `webhooks:write`. Common errors: 401 invalid credential, 403 missing ability, 402 subscription restriction, 404 hidden/missing resource, 409 invalid state, 422 invalid input, 429 rate limit.
+
+## Contacts and campaigns
+
+Use `GET|POST /contacts` to manage consent-aware recipients and `GET|POST /campaigns` to launch a campaign. Campaigns accept 1-1,000 contact IDs. Only contacts with recorded consent and no organization suppression are queued; every excluded recipient remains in the campaign snapshot with its reason. Opt-outs are durable and are not cleared merely by changing the contact record.
 
 ## Webhook verification
 

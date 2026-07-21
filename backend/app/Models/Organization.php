@@ -77,6 +77,18 @@ final class Organization extends Model
         return $this->hasMany(Message::class);
     }
 
+    /** @return HasMany<Contact, $this> */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(Contact::class);
+    }
+
+    /** @return HasMany<Campaign, $this> */
+    public function campaigns(): HasMany
+    {
+        return $this->hasMany(Campaign::class);
+    }
+
     /** @return HasMany<InboundMessage, $this> */
     public function inboundMessages(): HasMany
     {
