@@ -54,7 +54,7 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
-    'support_email' => env('SUPPORT_EMAIL', 'htsmscustomerservice@cm-ea.com'),
+    'support_email' => env('SUPPORT_EMAIL', 'contact@cm-ea.com'),
 
     /*
     |--------------------------------------------------------------------------

@@ -16,7 +16,7 @@ class ExampleTest extends TestCase
 
         $response
             ->assertStatus(200)
-            ->assertSee('htsmscustomerservice@cm-ea.com')
-            ->assertSee('mailto:htsmscustomerservice@cm-ea.com', false);
+            ->assertSee('contact@cm-ea.com')
+            ->assertSee('mailto:contact@cm-ea.com', false);
     }
 }
