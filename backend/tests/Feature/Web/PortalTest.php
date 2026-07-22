@@ -22,6 +22,17 @@ final class PortalTest extends TestCase
         $this->get('/register')->assertOk()->assertSee('Create your account');
     }
 
+    public function test_devices_page_includes_android_installation_and_download(): void
+    {
+        [$user, $organization] = $this->membership();
+
+        $this->actingAs($user)->get("/app/{$organization->getKey()}/devices")
+            ->assertOk()
+            ->assertSee('Install HTSMS on your phone')
+            ->assertSee('downloads/htsms-gateway-v0.1.0-beta.apk', false)
+            ->assertSee('Requires Android 8.0 or newer.');
+    }
+
     public function test_guest_is_redirected_and_member_can_view_dashboard(): void
     {
         [$user, $organization] = $this->membership();
