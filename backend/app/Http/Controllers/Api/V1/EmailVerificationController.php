@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\Identity\SecurityAuditService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -31,7 +32,7 @@ final class EmailVerificationController extends Controller
         return response()->json(['meta' => ['message' => 'If verification is required, an email has been sent.']]);
     }
 
-    public function verify(Request $request, int $id, string $hash): JsonResponse
+    public function verify(Request $request, int $id, string $hash): JsonResponse|RedirectResponse
     {
         $user = User::query()->findOrFail($id);
         abort_unless(hash_equals(sha1($user->getEmailForVerification()), $hash), Response::HTTP_FORBIDDEN);
@@ -42,6 +43,10 @@ final class EmailVerificationController extends Controller
             $this->audit->record(SecurityEvent::EmailVerified, $request, $user);
         }
 
-        return response()->json(['meta' => ['message' => 'Email address verified. You may now sign in.']]);
+        if ($request->expectsJson()) {
+            return response()->json(['meta' => ['message' => 'Email address verified. You may now sign in.']]);
+        }
+
+        return redirect()->route('login', ['verified' => 1]);
     }
 }

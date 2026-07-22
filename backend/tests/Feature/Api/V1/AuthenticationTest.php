@@ -83,6 +83,21 @@ final class AuthenticationTest extends TestCase
         self::assertSame(0, $user->tokens()->count());
     }
 
+    public function test_browser_verification_redirects_to_a_friendly_sign_in_confirmation(): void
+    {
+        $user = User::factory()->unverified()->create();
+        $url = URL::temporarySignedRoute('verification.verify', now()->addMinutes(30), [
+            'id' => $user->getKey(),
+            'hash' => sha1($user->getEmailForVerification()),
+        ]);
+
+        $this->get($url)->assertRedirect(route('login', ['verified' => 1]));
+
+        $this->get(route('login', ['verified' => 1]))
+            ->assertOk()
+            ->assertSee('Email address verified successfully. You can now sign in.');
+    }
+
     public function test_invalid_verification_signature_is_rejected(): void
     {
         $user = User::factory()->unverified()->create();
