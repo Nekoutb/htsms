@@ -28,9 +28,10 @@ final class PortalTest extends TestCase
 
         $this->actingAs($user)->get("/app/{$organization->getKey()}/devices")
             ->assertOk()
-            ->assertSee('Install HTSMS on your phone')
-            ->assertSee('downloads/htsms-gateway-v0.1.0-beta.apk', false)
-            ->assertSee('Requires Android 8.0 or newer.');
+            ->assertSee('Connect your phone in three steps')
+            ->assertSee('downloads/htsms-gateway-v0.2.0-beta.apk', false)
+            ->assertSee('Scan QR code')
+            ->assertSee('Android 8.0 or newer.');
     }
 
     public function test_guest_is_redirected_and_member_can_view_dashboard(): void
@@ -75,6 +76,8 @@ final class PortalTest extends TestCase
         $response = $this->actingAs($owner)->post("/app/{$organization->getKey()}/devices/pair")
             ->assertRedirect(route('portal.devices', $organization));
         self::assertIsString($response->getSession()->get('pairing_token'));
+        self::assertMatchesRegularExpression('/^[A-HJ-NP-Z2-9]{8}$/', $response->getSession()->get('pairing_code'));
+        self::assertStringStartsWith('htsms://pair?code=', $response->getSession()->get('pairing_uri'));
 
         [$developer, $developerOrganization] = $this->membership(OrganizationRole::Developer);
         $this->actingAs($developer)->post("/app/{$developerOrganization->getKey()}/devices/pair")

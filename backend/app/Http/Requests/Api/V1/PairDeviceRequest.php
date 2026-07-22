@@ -19,7 +19,7 @@ final class PairDeviceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pairing_token' => ['required', 'string', 'starts_with:htsms_pair_', 'max:128'],
+            'pairing_token' => ['required', 'string', 'regex:/^htsms_pair_[A-HJ-NP-Z2-9]{8}$/', 'max:32'],
             'name' => ['required', 'string', 'min:2', 'max:120'],
             'manufacturer' => ['required', 'string', 'max:80'],
             'model' => ['required', 'string', 'max:120'],

@@ -66,7 +66,7 @@ final class AppServiceProvider extends ServiceProvider
         RateLimiter::for('password-reset', static fn (Request $request): Limit => Limit::perHour(5)
             ->by($request->ip() ?? 'unknown'));
 
-        RateLimiter::for('device-pairing', static fn (Request $request): Limit => Limit::perMinute(10)
+        RateLimiter::for('device-pairing', static fn (Request $request): Limit => Limit::perMinute(5)
             ->by($request->ip() ?? 'unknown'));
 
         RateLimiter::for('device-heartbeat', static function (Request $request): Limit {

@@ -18,7 +18,7 @@ class ExampleTest extends TestCase
             ->assertStatus(200)
             ->assertSee('contact@cm-ea.com')
             ->assertSee('mailto:contact@cm-ea.com', false)
-            ->assertSee('downloads/htsms-gateway-v0.1.0-beta.apk', false);
+            ->assertSee('downloads/htsms-gateway-v0.2.0-beta.apk', false);
     }
 
     public function test_mailersend_api_transport_is_available(): void
@@ -28,11 +28,11 @@ class ExampleTest extends TestCase
 
     public function test_signed_android_beta_and_checksum_are_published(): void
     {
-        $apk = public_path('downloads/htsms-gateway-v0.1.0-beta.apk');
+        $apk = public_path('downloads/htsms-gateway-v0.2.0-beta.apk');
 
         $this->assertFileExists($apk);
         $this->assertSame(
-            'd0c48aa356bcbea12be09423a0a1732f939882438d0c3d441b76f215621ad419',
+            '99f2d8baf2533a5e25542c0ffe455203596a7a7069f6dc43c1f5bca6f7bd2cfc',
             hash_file('sha256', $apk),
         );
     }

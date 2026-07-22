@@ -14,8 +14,10 @@ Native Kotlin gateway that pairs an Android phone and its SIM cards with an HTSM
 1. Open the `android` directory in Android Studio.
 2. Sync Gradle and build the `debug` variant.
 3. Install on a physical phone and grant Phone, SMS, and Notification permissions.
-4. In the HTSMS web dashboard, open **Devices** and create a pairing code.
-5. Enter the HTTPS backend URL, phone name, and one-time pairing code.
+4. In the HTSMS web dashboard, open **Devices** and create a secure pairing QR.
+5. Tap **Scan QR code** in the app and scan it. If needed, enter the displayed 8-character fallback code.
+
+The production server is built into the signed app, so customers cannot accidentally connect to an insecure or mistyped endpoint. Pairing QR codes expire after 10 minutes and can be redeemed only once.
 
 The release build disables cleartext traffic. Use an HTTPS staging endpoint for real-device testing.
 

@@ -98,7 +98,9 @@ final class PortalController extends Controller
 
         return redirect()->route('portal.devices', $organization)
             ->with('pairing_token', $issued->plainTextToken)
-            ->with('status', 'Pairing code created. It expires in 10 minutes and can be used once.');
+            ->with('pairing_code', $issued->shortCode)
+            ->with('pairing_uri', 'htsms://pair?code='.$issued->shortCode)
+            ->with('status', 'Secure pairing QR created. Scan it within 10 minutes; it can be used once.');
     }
 
     public function revokeDevice(Request $request, Organization $organization, Device $device): RedirectResponse

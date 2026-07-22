@@ -11,5 +11,6 @@ final readonly class IssuedPairingChallenge
     public function __construct(
         public DevicePairingChallenge $challenge,
         public string $plainTextToken,
+        public string $shortCode,
     ) {}
 }

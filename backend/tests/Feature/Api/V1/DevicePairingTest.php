@@ -24,6 +24,9 @@ final class DevicePairingTest extends TestCase
         $challenge = $this->postJson("/api/v1/organizations/{$organization->getKey()}/device-pairing-challenges")
             ->assertCreated();
         $token = $challenge->json('data.pairing_token');
+        self::assertMatchesRegularExpression('/^htsms_pair_[A-HJ-NP-Z2-9]{8}$/', $token);
+        self::assertSame(substr($token, 11), $challenge->json('data.pairing_code'));
+        self::assertSame('htsms://pair?code='.substr($token, 11), $challenge->json('data.pairing_uri'));
 
         $pairing = $this->postJson('/api/v1/device/pair', $this->pairingPayload($token))
             ->assertCreated();
@@ -39,7 +42,7 @@ final class DevicePairingTest extends TestCase
 
     public function test_expired_or_unknown_pairing_token_is_rejected(): void
     {
-        $this->postJson('/api/v1/device/pair', $this->pairingPayload('htsms_pair_'.str_repeat('0', 64)))
+        $this->postJson('/api/v1/device/pair', $this->pairingPayload('htsms_pair_ABCD2345'))
             ->assertNotFound();
     }
 

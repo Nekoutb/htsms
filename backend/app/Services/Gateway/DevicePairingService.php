@@ -20,14 +20,27 @@ final readonly class DevicePairingService
 
     public function createChallenge(Organization $organization, User $creator): IssuedPairingChallenge
     {
-        $plainTextToken = 'htsms_pair_'.bin2hex(random_bytes(32));
+        $shortCode = $this->shortCode();
+        $plainTextToken = 'htsms_pair_'.$shortCode;
         $challenge = $organization->devicePairingChallenges()->create([
             'created_by_user_id' => $creator->getKey(),
             'token_hash' => hash('sha256', $plainTextToken),
             'expires_at' => now()->addMinutes(10),
         ]);
 
-        return new IssuedPairingChallenge($challenge, $plainTextToken);
+        return new IssuedPairingChallenge($challenge, $plainTextToken, $shortCode);
+    }
+
+    private function shortCode(): string
+    {
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        $code = '';
+
+        for ($position = 0; $position < 8; $position++) {
+            $code .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+        }
+
+        return $code;
     }
 
     /**
