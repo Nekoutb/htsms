@@ -1,4 +1,13 @@
 services:
+  app:
+    networks: [private, public]
+
+  queue:
+    networks: [private, public]
+
+  webhooks:
+    networks: [private, public]
+
   nginx:
     networks: [private, public]
     ports:
