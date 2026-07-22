@@ -19,4 +19,9 @@ class ExampleTest extends TestCase
             ->assertSee('contact@cm-ea.com')
             ->assertSee('mailto:contact@cm-ea.com', false);
     }
+
+    public function test_mailersend_api_transport_is_available(): void
+    {
+        $this->assertSame('mailersend', config('mail.mailers.mailersend.transport'));
+    }
 }
