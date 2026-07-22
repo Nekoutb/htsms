@@ -5,6 +5,7 @@ chown -R www-data:www-data storage bootstrap/cache
 if [ -d /srv/public ]; then
   cp -R public/. /srv/public/
   chown -R www-data:www-data /srv/public
+  chmod -R a+rX /srv/public
 fi
 php artisan package:discover --ansi
 if [ "${HTSMS_RUN_MIGRATIONS:-false}" = "true" ]; then
