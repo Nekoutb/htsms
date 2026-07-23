@@ -44,6 +44,7 @@ class GatewayService : Service() {
 
     private fun loop() {
         val api = GatewayApi(this)
+        val preferences = GatewayPreferences(this)
         var heartbeatCountdown = 0
         while (running.get()) {
             try {
@@ -55,6 +56,7 @@ class GatewayService : Service() {
                 }
                 api.lease()?.let { dispatch(it, api) }
                 flushInbound(api)
+                preferences.lastSyncAt = System.currentTimeMillis()
             } catch (_: Exception) { /* Network errors retry without logging message contents or credentials. */ }
             heartbeatCountdown--
             try { Thread.sleep(10_000) } catch (_: InterruptedException) { return }

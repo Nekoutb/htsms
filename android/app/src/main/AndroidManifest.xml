@@ -10,6 +10,8 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
 
     <application android:allowBackup="false" android:fullBackupContent="false" android:label="HTSMS Gateway" android:theme="@style/Theme.HTSMS" android:usesCleartextTraffic="false">
@@ -26,6 +28,12 @@
             </intent-filter>
         </activity>
         <service android:name=".gateway.GatewayService" android:exported="false" android:foregroundServiceType="dataSync" />
+        <receiver android:name=".gateway.BootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
         <receiver android:name=".gateway.SmsSentReceiver" android:exported="false" />
         <receiver android:name=".gateway.SmsDeliveredReceiver" android:exported="false" />
         <receiver android:name=".gateway.InboundSmsReceiver" android:exported="true" android:permission="android.permission.BROADCAST_SMS">

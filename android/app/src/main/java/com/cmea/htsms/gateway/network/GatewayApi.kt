@@ -83,4 +83,20 @@ class GatewayApi(private val context: Context) {
     }
 }
 
-class GatewayApiException(val statusCode: Int, response: String) : Exception("HTSMS request failed ($statusCode): ${response.take(240)}")
+class GatewayApiException(val statusCode: Int, private val response: String) : Exception("HTSMS request failed ($statusCode): ${response.take(240)}") {
+    /** Plain-language explanation shown on the phone instead of raw status/JSON. */
+    fun userMessage(): String {
+        val serverMessage = runCatching {
+            JSONObject(response).optString("message").takeIf { it.isNotBlank() }
+        }.getOrNull()
+
+        return when {
+            statusCode == 402 -> serverMessage ?: "Your plan limit was reached. Review your plan in the HTSMS portal."
+            statusCode == 404 -> "This code has expired or was already used. Create a new QR code from the Devices page."
+            statusCode == 422 -> serverMessage ?: "The pairing details were not accepted. Create a new QR code and try again."
+            statusCode == 429 -> "Too many attempts. Wait a minute and try again."
+            statusCode >= 500 -> "The HTSMS server had a problem. Try again in a moment."
+            else -> serverMessage ?: "The connection was rejected (code $statusCode). Create a new QR code and try again."
+        }
+    }
+}
