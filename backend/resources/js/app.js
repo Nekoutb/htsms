@@ -1,6 +1,13 @@
 import './bootstrap';
 import QRCode from 'qrcode';
 
+// CSP forbids inline handlers, so destructive forms declare data-confirm instead.
+document.querySelectorAll('form[data-confirm]').forEach((form) => {
+    form.addEventListener('submit', (event) => {
+        if (! window.confirm(form.dataset.confirm)) event.preventDefault();
+    });
+});
+
 document.querySelectorAll('[data-copy]').forEach((button) => {
     button.addEventListener('click', async () => {
         const target = document.querySelector(button.dataset.copy);

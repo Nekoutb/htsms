@@ -10,6 +10,7 @@ use App\Models\Organization;
 use App\Models\User;
 use App\Services\Billing\SubscriptionService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 final readonly class OrganizationService
 {
@@ -20,7 +21,7 @@ final readonly class OrganizationService
         return DB::transaction(function () use ($data, $owner): Organization {
             $organization = Organization::query()->create([
                 'name' => $data->name,
-                'slug' => $data->slug,
+                'slug' => $data->slug ?? $this->uniqueSlug($data->name),
                 'timezone' => $data->timezone,
                 'locale' => $data->locale,
             ]);
@@ -34,5 +35,19 @@ final readonly class OrganizationService
 
             return $organization;
         });
+    }
+
+    private function uniqueSlug(string $name): string
+    {
+        $base = Str::limit(Str::slug($name), 60, '');
+        if ($base === '') {
+            $base = 'workspace';
+        }
+        $slug = $base;
+        while (Organization::query()->where('slug', $slug)->exists()) {
+            $slug = $base.'-'.Str::lower(Str::random(4));
+        }
+
+        return $slug;
     }
 }

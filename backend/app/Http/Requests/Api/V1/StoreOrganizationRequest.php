@@ -22,19 +22,21 @@ final class StoreOrganizationRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'min:2', 'max:120'],
-            'slug' => ['required', 'alpha_dash:ascii', 'min:2', 'max:80', Rule::unique('organizations', 'slug')],
-            'timezone' => ['required', 'timezone:all'],
-            'locale' => ['required', Rule::in(['en', 'fr'])],
+            'slug' => ['nullable', 'alpha_dash:ascii', 'min:2', 'max:80', Rule::unique('organizations', 'slug')],
+            'timezone' => ['nullable', 'timezone:all'],
+            'locale' => ['nullable', Rule::in(['en', 'fr'])],
         ];
     }
 
     public function toData(): CreateOrganizationData
     {
+        $slug = $this->string('slug')->lower()->trim()->toString();
+
         return new CreateOrganizationData(
-            name: $this->string('name')->toString(),
-            slug: $this->string('slug')->lower()->toString(),
-            timezone: $this->string('timezone')->toString(),
-            locale: $this->string('locale')->toString(),
+            name: $this->string('name')->trim()->toString(),
+            slug: $slug === '' ? null : $slug,
+            timezone: $this->filled('timezone') ? $this->string('timezone')->toString() : 'Africa/Douala',
+            locale: $this->filled('locale') ? $this->string('locale')->toString() : 'en',
         );
     }
 }

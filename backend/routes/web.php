@@ -6,6 +6,8 @@ use App\Http\Controllers\Web\BillingController;
 use App\Http\Controllers\Web\PlatformAdminController;
 use App\Http\Controllers\Web\PortalController;
 use App\Http\Controllers\Web\WebAuthenticationController;
+use App\Http\Controllers\Web\WebEmailVerificationController;
+use App\Http\Controllers\Web\WebPasswordResetController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -15,10 +17,19 @@ Route::middleware('guest')->group(function (): void {
     Route::post('/login', [WebAuthenticationController::class, 'login'])->middleware('throttle:auth-login');
     Route::get('/register', [WebAuthenticationController::class, 'registerForm'])->name('register');
     Route::post('/register', [WebAuthenticationController::class, 'register'])->middleware('throttle:auth-register');
+    Route::get('/forgot-password', [WebPasswordResetController::class, 'request'])->name('password.request');
+    Route::post('/forgot-password', [WebPasswordResetController::class, 'email'])->middleware('throttle:password-reset')->name('password.email');
+    Route::get('/reset-password/{token}', [WebPasswordResetController::class, 'reset'])->name('password.reset');
+    Route::post('/reset-password', [WebPasswordResetController::class, 'update'])->middleware('throttle:password-reset')->name('password.update');
 });
 
+Route::get('/email/verify', [WebEmailVerificationController::class, 'notice'])->name('verification.notice');
+Route::post('/email/verification-notification', [WebEmailVerificationController::class, 'resend'])
+    ->middleware('throttle:6,1')->name('verification.send');
+
+Route::post('/logout', [WebAuthenticationController::class, 'logout'])->middleware('auth')->name('logout');
+
 Route::middleware(['auth', 'verified'])->group(function (): void {
-    Route::post('/logout', [WebAuthenticationController::class, 'logout'])->name('logout');
     Route::get('/app', [PortalController::class, 'home'])->name('portal.home');
     Route::post('/app/organizations', [PortalController::class, 'createOrganization'])->name('portal.organizations.store');
     Route::get('/app/{organization}', [PortalController::class, 'overview'])->name('portal.overview');

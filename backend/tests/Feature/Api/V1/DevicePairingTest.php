@@ -26,7 +26,10 @@ final class DevicePairingTest extends TestCase
         $token = $challenge->json('data.pairing_token');
         self::assertMatchesRegularExpression('/^htsms_pair_[A-HJ-NP-Z2-9]{8}$/', $token);
         self::assertSame(substr($token, 11), $challenge->json('data.pairing_code'));
-        self::assertSame('htsms://pair?code='.substr($token, 11), $challenge->json('data.pairing_uri'));
+        self::assertSame(
+            'htsms://pair?code='.substr($token, 11).'&host='.rawurlencode(rtrim((string) config('app.url'), '/')),
+            $challenge->json('data.pairing_uri'),
+        );
 
         $pairing = $this->postJson('/api/v1/device/pair', $this->pairingPayload($token))
             ->assertCreated();

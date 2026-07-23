@@ -78,6 +78,7 @@ final class PortalTest extends TestCase
         self::assertIsString($response->getSession()->get('pairing_token'));
         self::assertMatchesRegularExpression('/^[A-HJ-NP-Z2-9]{8}$/', $response->getSession()->get('pairing_code'));
         self::assertStringStartsWith('htsms://pair?code=', $response->getSession()->get('pairing_uri'));
+        self::assertStringContainsString('&host=', $response->getSession()->get('pairing_uri'));
 
         [$developer, $developerOrganization] = $this->membership(OrganizationRole::Developer);
         $this->actingAs($developer)->post("/app/{$developerOrganization->getKey()}/devices/pair")
