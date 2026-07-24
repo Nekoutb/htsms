@@ -32,10 +32,14 @@ class PairingLinkTest {
     }
 
     @Test
-    fun `ignores insecure or malformed hosts but keeps the code`() {
+    fun `ignores untrusted insecure or malformed hosts but keeps the code`() {
         assertEquals(
             PairingLink("MDYX79U5", null),
             PairingLink.parse("htsms://pair?code=MDYX79U5&host=http%3A%2F%2Fevil.example"),
+        )
+        assertEquals(
+            PairingLink("MDYX79U5", null),
+            PairingLink.parse("htsms://pair?code=MDYX79U5&host=https%3A%2F%2Fevil.example"),
         )
         assertEquals(
             PairingLink("MDYX79U5", null),
@@ -44,9 +48,9 @@ class PairingLinkTest {
     }
 
     @Test
-    fun `accepts https host with port and trailing slash`() {
+    fun `rejects other https deployment hosts`() {
         val link = PairingLink.parse("htsms://pair?code=MDYX79U5&host=https%3A%2F%2Fstaging.cm-ea.com%3A8443%2F")
-        assertEquals(PairingLink("MDYX79U5", "https://staging.cm-ea.com:8443"), link)
+        assertEquals(PairingLink("MDYX79U5", null), link)
     }
 
     @Test
