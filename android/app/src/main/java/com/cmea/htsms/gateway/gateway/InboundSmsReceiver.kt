@@ -38,11 +38,17 @@ class InboundSmsReceiver : BroadcastReceiver() {
             .put("received_at", Instant.ofEpochMilli(receivedAt).toString())
             .put("sim_slot_index", slotIndex)
         val pendingResult = goAsync()
-        Executors.newSingleThreadExecutor().execute {
+        val applicationContext = context.applicationContext
+        worker.execute {
             try {
-                runCatching { GatewayApi(context).inbound(payload) }
-                    .onFailure { PendingInboundStore(context).add(payload) }
+                runCatching { GatewayApi(applicationContext).inbound(payload) }
+                    .onFailure { PendingInboundStore(applicationContext).add(payload) }
             } finally { pendingResult.finish() }
         }
+    }
+
+    companion object {
+        // One shared worker; a fresh pool per broadcast leaked threads under bursty inbound traffic.
+        private val worker = Executors.newSingleThreadExecutor()
     }
 }

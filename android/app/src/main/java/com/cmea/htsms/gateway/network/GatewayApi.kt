@@ -10,7 +10,7 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-data class LeasedMessage(val id: String, val recipient: String, val content: String)
+data class LeasedMessage(val id: String, val recipient: String, val content: String, val simSlotIndex: Int?)
 data class PairingResult(val deviceId: String, val credential: String)
 
 class GatewayApi(private val context: Context) {
@@ -45,7 +45,8 @@ class GatewayApi(private val context: Context) {
         val response = request("POST", "/api/v1/device/messages/lease", JSONObject())
         if (response.isNull("data")) return null
         val data = response.getJSONObject("data")
-        return LeasedMessage(data.getString("id"), data.getString("to"), data.getString("content"))
+        val simSlotIndex = if (data.isNull("sim_slot_index")) null else data.optInt("sim_slot_index")
+        return LeasedMessage(data.getString("id"), data.getString("to"), data.getString("content"), simSlotIndex)
     }
 
     fun status(messageId: String, status: String, failureCode: String? = null, failureMessage: String? = null) {
