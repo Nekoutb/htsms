@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $organization_id
  * @property string|null $device_id
  * @property string|null $device_sim_slot_id
+ * @property int|null $preferred_sim_slot
  * @property string $recipient
  * @property string $body
  * @property MessageStatus $status
@@ -35,7 +36,7 @@ final class Message extends Model
 
     /** @var list<string> */
     protected $fillable = [
-        'organization_id', 'device_id', 'device_sim_slot_id', 'recipient', 'body', 'status',
+        'organization_id', 'device_id', 'device_sim_slot_id', 'preferred_sim_slot', 'recipient', 'body', 'status',
         'idempotency_key', 'scheduled_at', 'assigned_at', 'sent_at', 'delivered_at',
         'expires_at', 'attempt_count', 'failure_code', 'failure_message',
     ];
@@ -69,6 +70,7 @@ final class Message extends Model
             'delivered_at' => 'immutable_datetime',
             'expires_at' => 'immutable_datetime',
             'attempt_count' => 'integer',
+            'preferred_sim_slot' => 'integer',
         ];
     }
 }

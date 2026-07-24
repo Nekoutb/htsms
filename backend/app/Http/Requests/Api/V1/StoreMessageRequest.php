@@ -21,6 +21,7 @@ final class StoreMessageRequest extends FormRequest
             'content' => ['required', 'string', 'max:1600'],
             'send_at' => ['nullable', 'date', 'after:now'],
             'expires_at' => ['nullable', 'date', 'after:now'],
+            'sim_slot' => ['nullable', 'integer', 'in:0,1'],
         ];
     }
 }

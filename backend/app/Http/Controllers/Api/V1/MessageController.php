@@ -39,6 +39,7 @@ final class MessageController extends Controller
             $organization, $request->string('to')->toString(), $request->string('content')->toString(),
             $scheduledAt, $request->date('expires_at'),
             is_string($idempotencyKey) && $idempotencyKey !== '' ? $idempotencyKey : null, 'api',
+            $request->has('sim_slot') ? $request->integer('sim_slot') : null,
         );
 
         return (new MessageResource($submitted->message))->response()

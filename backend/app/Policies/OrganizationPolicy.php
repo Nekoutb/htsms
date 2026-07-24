@@ -33,6 +33,17 @@ final class OrganizationPolicy
         return $membership?->role?->canManageMembers() === true;
     }
 
+    public function manageMarketing(User $user, Organization $organization): bool
+    {
+        $membership = $this->membership($user, $organization);
+
+        return in_array($membership?->role, [
+            OrganizationRole::Owner,
+            OrganizationRole::Administrator,
+            OrganizationRole::CampaignManager,
+        ], true);
+    }
+
     private function membership(User $user, Organization $organization): ?OrganizationMembership
     {
         return OrganizationMembership::query()

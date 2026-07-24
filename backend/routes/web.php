@@ -3,6 +3,7 @@
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\Web\AdminMfaController;
 use App\Http\Controllers\Web\BillingController;
+use App\Http\Controllers\Web\MarketingController;
 use App\Http\Controllers\Web\PlatformAdminController;
 use App\Http\Controllers\Web\PortalController;
 use App\Http\Controllers\Web\WebAuthenticationController;
@@ -41,6 +42,11 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/app/{organization}/developer', [PortalController::class, 'developer'])->name('portal.developer');
     Route::post('/app/{organization}/developer/api-keys', [PortalController::class, 'createApiKey'])->name('portal.api-keys.store');
     Route::delete('/app/{organization}/developer/api-keys/{apiKey}', [PortalController::class, 'revokeApiKey'])->name('portal.api-keys.revoke');
+    Route::post('/app/{organization}/developer/webhooks', [PortalController::class, 'createWebhook'])->name('portal.webhooks.store');
+    Route::delete('/app/{organization}/developer/webhooks/{webhookEndpoint}', [PortalController::class, 'revokeWebhook'])->name('portal.webhooks.revoke');
+    Route::get('/app/{organization}/marketing', [MarketingController::class, 'index'])->name('portal.marketing');
+    Route::post('/app/{organization}/marketing/contacts', [MarketingController::class, 'storeContact'])->name('portal.contacts.store');
+    Route::post('/app/{organization}/marketing/campaigns', [MarketingController::class, 'storeCampaign'])->name('portal.campaigns.store');
     Route::get('/app/{organization}/billing', [BillingController::class, 'show'])->name('portal.billing');
     Route::post('/app/{organization}/billing/requests', [BillingController::class, 'requestChange'])->name('portal.billing.request');
 });

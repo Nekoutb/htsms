@@ -65,6 +65,45 @@ final class OutboundMessageTest extends TestCase
         self::assertSame(5, $message->events()->count());
     }
 
+    public function test_preferred_sim_slot_is_stored_and_leased_to_the_device(): void
+    {
+        [$apiCredential, $apiKey] = $this->apiKey(['messages:write']);
+        [$deviceCredential] = $this->device($apiKey->organization);
+
+        $messageId = $this->withToken($apiCredential)->postJson('/api/v1/messages', [
+            'to' => '+237670000009',
+            'content' => 'Send this from the second SIM.',
+            'sim_slot' => 1,
+        ])->assertCreated()->json('data.sim_slot_index');
+        self::assertSame(1, Message::query()->sole()->preferred_sim_slot);
+
+        $this->withToken($deviceCredential)->postJson('/api/v1/device/messages/lease')
+            ->assertOk()
+            ->assertJsonPath('data.sim_slot_index', 1);
+    }
+
+    public function test_invalid_sim_slot_is_rejected(): void
+    {
+        [$apiCredential] = $this->apiKey(['messages:write']);
+
+        $this->withToken($apiCredential)->postJson('/api/v1/messages', [
+            'to' => '+237670000009', 'content' => 'Bad slot', 'sim_slot' => 5,
+        ])->assertUnprocessable()->assertJsonValidationErrors('sim_slot');
+    }
+
+    public function test_message_without_sim_preference_leases_a_null_slot(): void
+    {
+        [$apiCredential, $apiKey] = $this->apiKey(['messages:write']);
+        [$deviceCredential] = $this->device($apiKey->organization);
+        $this->withToken($apiCredential)->postJson('/api/v1/messages', [
+            'to' => '+237670000009', 'content' => 'No preference',
+        ])->assertCreated()->assertJsonPath('data.sim_slot_index', null);
+
+        $this->withToken($deviceCredential)->postJson('/api/v1/device/messages/lease')
+            ->assertOk()
+            ->assertJsonPath('data.sim_slot_index', null);
+    }
+
     public function test_other_device_cannot_update_message_and_illegal_transition_conflicts(): void
     {
         [$apiCredential, $apiKey] = $this->apiKey(['messages:write']);

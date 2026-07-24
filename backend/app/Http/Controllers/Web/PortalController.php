@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Domain\Integration\WebhookEvent;
 use App\Domain\Messaging\MessageStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreDeveloperApiKeyRequest;
 use App\Http\Requests\Api\V1\StoreMessageRequest;
 use App\Http\Requests\Api\V1\StoreOrganizationRequest;
+use App\Http\Requests\Api\V1\StoreWebhookEndpointRequest;
 use App\Models\DeveloperApiKey;
 use App\Models\Device;
 use App\Models\Message;
 use App\Models\Organization;
 use App\Models\User;
+use App\Models\WebhookEndpoint;
 use App\Services\Gateway\DevicePairingService;
 use App\Services\Identity\OrganizationService;
 use App\Services\Integration\DeveloperApiKeyService;
+use App\Services\Integration\WebhookEndpointService;
 use App\Services\Messaging\MessageSubmissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -69,7 +73,31 @@ final class PortalController extends Controller
 
         return view('portal.messages', $this->context($request, $organization) + [
             'messages' => $organization->messages()->latest()->paginate(25),
+            'simSlots' => $this->availableSimSlots($organization),
+            'inbound' => $organization->inboundMessages()->latest('received_at')->limit(10)->get(),
         ]);
+    }
+
+    /**
+     * Distinct SIM slots reported by this workspace's live devices, labelled by
+     * carrier. Drives the compose SIM picker, which is hidden for single-SIM fleets.
+     *
+     * @return array<int, string>
+     */
+    private function availableSimSlots(Organization $organization): array
+    {
+        $slots = [];
+        $devices = $organization->devices()->whereNull('revoked_at')->with('simSlots')->get();
+        foreach ($devices as $device) {
+            foreach ($device->simSlots as $slot) {
+                if ($slot->is_active) {
+                    $slots[$slot->slot_index] = $slot->carrier_name ?? ('SIM '.($slot->slot_index + 1));
+                }
+            }
+        }
+        ksort($slots);
+
+        return $slots;
     }
 
     public function send(StoreMessageRequest $request, Organization $organization, MessageSubmissionService $submissions): RedirectResponse
@@ -79,6 +107,7 @@ final class PortalController extends Controller
         $submissions->submit(
             $organization, $request->string('to')->toString(), $request->string('content')->toString(),
             $scheduledAt, $request->date('expires_at'), null, 'dashboard',
+            $request->has('sim_slot') && $request->input('sim_slot') !== '' ? $request->integer('sim_slot') : null,
         );
 
         return redirect()->route('portal.messages', $organization)->with('status', 'Message accepted for delivery.');
@@ -123,7 +152,31 @@ final class PortalController extends Controller
 
         return view('portal.developer', $this->context($request, $organization) + [
             'apiKeys' => $organization->developerApiKeys()->latest()->get(),
+            'webhooks' => $organization->webhookEndpoints()->latest()->get(),
+            'webhookEvents' => WebhookEvent::cases(),
         ]);
+    }
+
+    public function createWebhook(StoreWebhookEndpointRequest $request, Organization $organization, WebhookEndpointService $webhooks): RedirectResponse
+    {
+        $this->authorize('manageApiKeys', $organization);
+        $issued = $webhooks->create(
+            $organization, $request->string('name')->toString(),
+            $request->string('url')->toString(), $request->eventValues(),
+        );
+
+        return redirect()->route('portal.developer', $organization)
+            ->with('plain_text_webhook_secret', $issued->plainTextSecret)
+            ->with('status', 'Webhook created. Copy the signing secret now; it will not be shown again.');
+    }
+
+    public function revokeWebhook(Request $request, Organization $organization, WebhookEndpoint $webhookEndpoint, WebhookEndpointService $webhooks): RedirectResponse
+    {
+        $this->authorize('manageApiKeys', $organization);
+        abort_unless($webhookEndpoint->organization_id === $organization->getKey(), Response::HTTP_NOT_FOUND);
+        $webhooks->disable($webhookEndpoint);
+
+        return back()->with('status', 'Webhook endpoint disabled.');
     }
 
     public function createApiKey(StoreDeveloperApiKeyRequest $request, Organization $organization, DeveloperApiKeyService $apiKeys): RedirectResponse
