@@ -30,12 +30,9 @@ final class SubscriptionService
 
     public function createTrial(Organization $organization): Subscription
     {
-        $trialDays = config('htsms.trial_days');
-        $days = is_int($trialDays) ? $trialDays : 14;
-
         return $organization->subscription()->firstOrCreate([], [
-            'plan' => 'trial', 'status' => 'trialing', 'messages_used' => 0,
-            'trial_ends_at' => now()->addDays($days), 'current_period_starts_at' => now(), 'current_period_ends_at' => now()->addDays($days),
+            'plan' => 'free', 'status' => 'active', 'messages_used' => 0,
+            'trial_ends_at' => null, 'current_period_starts_at' => now(), 'current_period_ends_at' => now()->addMonth(),
         ]);
     }
 
@@ -65,6 +62,18 @@ final class SubscriptionService
         }
     }
 
+    public function ensureApiKeyAvailable(Organization $organization): void
+    {
+        $subscription = $this->current($organization);
+        $this->ensureUsable($organization, $subscription);
+        $active = $organization->developerApiKeys()->whereNull('revoked_at')
+            ->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+            ->count();
+        if ($active >= $this->limit($subscription->plan, 'api_keys')) {
+            throw new SubscriptionLimitException('The developer key limit for this plan has been reached.');
+        }
+    }
+
     public function activate(Subscription $subscription, string $plan): Subscription
     {
         $this->limit($plan, 'messages');
@@ -83,6 +92,9 @@ final class SubscriptionService
         }
         if ($organization->sending_paused_at !== null) {
             throw new SubscriptionLimitException('Sending is paused for this workspace.');
+        }
+        if (! $organization->outbound_enabled) {
+            throw new SubscriptionLimitException('Outbound messaging is disabled for this workspace.');
         }
         if (! in_array($subscription->status, ['trialing', 'active'], true)) {
             throw new SubscriptionLimitException('An active subscription is required.');

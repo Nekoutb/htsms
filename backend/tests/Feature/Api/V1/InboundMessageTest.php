@@ -42,6 +42,22 @@ final class InboundMessageTest extends TestCase
             ->postJson('/api/v1/device/inbound-messages', [])->assertUnauthorized();
     }
 
+    public function test_disabled_inbound_channel_rejects_device_upload(): void
+    {
+        [$credential, $device] = $this->device();
+        $device->organization->forceFill(['inbound_enabled' => false])->save();
+
+        $this->withToken($credential)->postJson('/api/v1/device/inbound-messages', [
+            'device_event_id' => 'sms-disabled-0001',
+            'sender' => '+237670000010',
+            'content' => 'Blocked inbound',
+            'received_at' => now()->toIso8601String(),
+            'sim_slot_index' => 0,
+        ])->assertForbidden()->assertJsonPath('message', 'Inbound messaging is disabled for this workspace.');
+
+        self::assertSame(0, InboundMessage::query()->count());
+    }
+
     public function test_stop_keyword_immediately_suppresses_sender(): void
     {
         [$credential, $device] = $this->device();

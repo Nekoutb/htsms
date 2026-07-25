@@ -20,6 +20,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $password
  * @property CarbonImmutable|null $email_verified_at
  * @property bool $is_platform_admin
+ * @property int|null $onboarded_by_user_id
  */
 final class User extends Authenticatable implements MustVerifyEmailContract
 {

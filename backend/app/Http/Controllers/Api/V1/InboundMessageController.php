@@ -32,6 +32,7 @@ final class InboundMessageController extends Controller
         $device = $request->attributes->get('device');
         abort_unless($device instanceof Device, Response::HTTP_UNAUTHORIZED);
         $organization = Organization::query()->findOrFail($device->organization_id);
+        abort_unless($organization->inbound_enabled, Response::HTTP_FORBIDDEN, 'Inbound messaging is disabled for this workspace.');
         $existing = $organization->inboundMessages()->where('device_id', $device->id)
             ->where('device_event_id', $request->string('device_event_id')->toString())->first();
         if ($existing !== null) {

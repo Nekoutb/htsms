@@ -55,6 +55,42 @@ final class PlatformAdminTest extends TestCase
         self::assertNotNull($organization->refresh()->suspended_at);
     }
 
+    public function test_admin_can_toggle_inbound_and_outbound_channels(): void
+    {
+        [, $organization] = $this->workspace();
+        $admin = User::factory()->create(['is_platform_admin' => true]);
+        $session = $this->verifiedSession($admin);
+
+        $this->actingAs($admin)->withSession($session)
+            ->post("/admin/organizations/{$organization->id}/channels/inbound")->assertRedirect();
+        $this->actingAs($admin)->withSession($session)
+            ->post("/admin/organizations/{$organization->id}/channels/outbound")->assertRedirect();
+
+        self::assertFalse($organization->refresh()->inbound_enabled);
+        self::assertFalse($organization->refresh()->outbound_enabled);
+    }
+
+    public function test_admin_can_onboard_and_delete_only_their_customer(): void
+    {
+        Notification::fake();
+        $admin = User::factory()->create(['is_platform_admin' => true]);
+        $session = $this->verifiedSession($admin);
+        $this->actingAs($admin)->withSession($session)->post('/admin/users', [
+            'name' => 'Invited Customer',
+            'email' => 'invited@example.com',
+            'business_name' => 'Invited Business',
+            'locale' => 'fr',
+        ])->assertRedirect();
+
+        $customer = User::query()->where('email', 'invited@example.com')->sole();
+        self::assertSame($admin->id, $customer->onboarded_by_user_id);
+        self::assertSame('free', $customer->organizations()->sole()->subscription()->sole()->plan);
+
+        $this->actingAs($admin)->withSession($session)
+            ->delete("/admin/users/{$customer->id}")->assertRedirect();
+        $this->assertDatabaseMissing('users', ['id' => $customer->id]);
+    }
+
     public function test_admin_requires_single_use_email_challenge(): void
     {
         Notification::fake();

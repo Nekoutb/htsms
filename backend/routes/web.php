@@ -12,6 +12,12 @@ use App\Http\Controllers\Web\WebPasswordResetController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+Route::get('/language/{locale}', function (Request $request, string $locale): RedirectResponse {
+    abort_unless(in_array($locale, ['en', 'fr'], true), 404);
+    $request->session()->put('locale', $locale);
+
+    return back();
+})->name('locale.switch');
 Route::get('/health/ready', HealthController::class)->middleware('throttle:30,1');
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [WebAuthenticationController::class, 'loginForm'])->name('login');
@@ -59,8 +65,12 @@ Route::prefix('admin/mfa')->middleware(['auth', 'verified', 'throttle:10,1'])->g
 
 Route::prefix('admin')->middleware(['auth', 'verified', 'platform-admin'])->group(function (): void {
     Route::get('/', [PlatformAdminController::class, 'index'])->name('admin.index');
+    Route::post('/users', [PlatformAdminController::class, 'storeUser'])->name('admin.users.store');
+    Route::delete('/users/{user}', [PlatformAdminController::class, 'destroyUser'])->name('admin.users.destroy');
     Route::post('/subscription-requests/{changeRequest}/approve', [PlatformAdminController::class, 'approve'])->name('admin.requests.approve');
     Route::post('/subscription-requests/{changeRequest}/reject', [PlatformAdminController::class, 'reject'])->name('admin.requests.reject');
     Route::post('/organizations/{organization}/pause', [PlatformAdminController::class, 'pause'])->name('admin.organizations.pause');
     Route::post('/organizations/{organization}/suspend', [PlatformAdminController::class, 'suspend'])->name('admin.organizations.suspend');
+    Route::post('/organizations/{organization}/channels/{channel}', [PlatformAdminController::class, 'toggleChannel'])
+        ->whereIn('channel', ['inbound', 'outbound'])->name('admin.organizations.channels');
 });
