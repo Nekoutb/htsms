@@ -72,9 +72,9 @@ final class DevicePairingTest extends TestCase
             'app_version' => '1.1.0',
             'android_version' => '15',
             'battery_percent' => 62,
-            // Android can briefly report no active network capabilities even
-            // though the heartbeat request subsequently reaches the server.
-            'connection_type' => 'offline',
+            // Gateway v0.2 sent Android's legacy typeName instead of the v0.3
+            // normalized "cellular" value.
+            'connection_type' => 'mobile',
             'fcm_token' => 'firebase-token',
             'sims' => [[
                 'slot_index' => 0,
@@ -88,7 +88,7 @@ final class DevicePairingTest extends TestCase
             ->assertJsonPath('data.sim_slots.0.carrier_name', 'MTN Cameroon');
 
         self::assertSame('1.1.0', $device->fresh()?->app_version);
-        self::assertSame('offline', $device->fresh()?->connection_type);
+        self::assertSame('mobile', $device->fresh()?->connection_type);
         self::assertSame('+237670000000', $device->simSlots()->sole()->phone_number);
     }
 
