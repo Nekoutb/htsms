@@ -77,7 +77,8 @@ class GatewayService : Service() {
             api.status(message.id, "failed", "permission_denied", "SMS permission is not granted")
             return
         }
-        val active = SimRepository(this).active()
+        val preferences = GatewayPreferences(this)
+        val active = SimRepository(this).active().filter { preferences.outgoingEnabled(it.simSlotIndex) }
         val subscription = selectSubscription(active, message.simSlotIndex)
         if (subscription == null) {
             api.status(message.id, "failed", "no_active_sim", requestedSimMessage(message.simSlotIndex, active.isEmpty()))

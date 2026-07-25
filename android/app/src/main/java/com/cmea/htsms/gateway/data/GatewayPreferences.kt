@@ -22,6 +22,18 @@ class GatewayPreferences(context: Context) {
         set(value) { preferences.edit().putLong("last_sync_at", value).apply() }
     val isPaired: Boolean get() = deviceId != null
 
+    fun outgoingEnabled(slotIndex: Int): Boolean = preferences.getBoolean("sim_${slotIndex}_outgoing", true)
+    fun incomingEnabled(slotIndex: Int): Boolean = preferences.getBoolean("sim_${slotIndex}_incoming", true)
+    fun setOutgoingEnabled(slotIndex: Int, enabled: Boolean) {
+        preferences.edit().putBoolean("sim_${slotIndex}_outgoing", enabled).apply()
+    }
+    fun setIncomingEnabled(slotIndex: Int, enabled: Boolean) {
+        preferences.edit().putBoolean("sim_${slotIndex}_incoming", enabled).apply()
+    }
+    var debugLogsEnabled: Boolean
+        get() = preferences.getBoolean("debug_logs", false)
+        set(value) { preferences.edit().putBoolean("debug_logs", value).apply() }
+
     val sentToday: Int
         get() = if (preferences.getString("sent_date", null) == today()) preferences.getInt("sent_count", 0) else 0
 

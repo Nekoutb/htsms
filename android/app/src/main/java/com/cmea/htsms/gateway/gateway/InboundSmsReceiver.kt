@@ -28,6 +28,7 @@ class InboundSmsReceiver : BroadcastReceiver() {
         } else {
             intent.getIntExtra("slot", 0)
         }.coerceIn(0, 3)
+        if (!GatewayPreferences(context).incomingEnabled(slotIndex)) return
         val eventSource = "$sender|$receivedAt|$slotIndex|$content"
         val eventId = MessageDigest.getInstance("SHA-256").digest(eventSource.toByteArray()).joinToString("") { "%02x".format(it) }
         val payload = JSONObject()
