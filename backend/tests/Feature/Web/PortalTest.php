@@ -15,6 +15,17 @@ final class PortalTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_language_switch_persists_locale_and_returns_to_previous_page(): void
+    {
+        $this->from('/')->get('/language/fr')
+            ->assertRedirect('/')
+            ->assertSessionHas('locale', 'fr');
+
+        $this->get('/')->assertOk()
+            ->assertSee('lang="fr"', false)
+            ->assertSee('Votre téléphone Android devient une');
+    }
+
     public function test_marketing_and_authentication_pages_render(): void
     {
         $this->get('/')->assertOk()->assertSee('Your Android phone is now an');

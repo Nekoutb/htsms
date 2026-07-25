@@ -1,5 +1,8 @@
 import './bootstrap';
 import QRCode from 'qrcode';
+import { localizePage } from './translations';
+
+localizePage();
 
 // CSP forbids inline handlers, so destructive forms declare data-confirm instead.
 document.querySelectorAll('form[data-confirm]').forEach((form) => {

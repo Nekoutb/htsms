@@ -9,6 +9,8 @@ use App\Http\Controllers\Web\PortalController;
 use App\Http\Controllers\Web\WebAuthenticationController;
 use App\Http\Controllers\Web\WebEmailVerificationController;
 use App\Http\Controllers\Web\WebPasswordResetController;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');

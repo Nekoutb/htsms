@@ -15,7 +15,7 @@ final class SubscriptionService
     {
         $subscription = $organization->subscription()->first();
         if ($subscription === null) {
-            $subscription = $this->createTrial($organization);
+            $subscription = $this->createFree($organization);
         }
         if ($subscription->status === 'trialing' && $subscription->trial_ends_at?->isPast() === true) {
             $subscription->forceFill(['status' => 'expired'])->save();
@@ -28,7 +28,7 @@ final class SubscriptionService
         return $subscription->refresh();
     }
 
-    public function createTrial(Organization $organization): Subscription
+    public function createFree(Organization $organization): Subscription
     {
         return $organization->subscription()->firstOrCreate([], [
             'plan' => 'free', 'status' => 'active', 'messages_used' => 0,
@@ -64,7 +64,8 @@ final class SubscriptionService
 
     public function ensureApiKeyAvailable(Organization $organization): void
     {
-        $subscription = $this->current($organization);
+        $current = $this->current($organization);
+        $subscription = Subscription::query()->whereKey($current->getKey())->lockForUpdate()->firstOrFail();
         $this->ensureUsable($organization, $subscription);
         $active = $organization->developerApiKeys()->whereNull('revoked_at')
             ->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>', now()))

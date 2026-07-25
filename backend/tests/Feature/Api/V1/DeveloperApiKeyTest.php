@@ -56,6 +56,21 @@ final class DeveloperApiKeyTest extends TestCase
         self::assertStringNotContainsString(str_repeat('a', 64), $content);
     }
 
+    public function test_free_plan_allows_only_one_active_developer_key(): void
+    {
+        [$user, $organization] = $this->member(OrganizationRole::Owner);
+        Sanctum::actingAs($user, ['api-keys:write']);
+        $payload = ['name' => 'First key', 'abilities' => ['messages:read']];
+
+        $this->postJson("/api/v1/organizations/{$organization->getKey()}/api-keys", $payload)->assertCreated();
+        $this->postJson("/api/v1/organizations/{$organization->getKey()}/api-keys", [
+            'name' => 'Second key',
+            'abilities' => ['messages:read'],
+        ])->assertStatus(402)->assertJsonPath('message', 'The developer key limit for this plan has been reached.');
+
+        self::assertSame(1, $organization->developerApiKeys()->whereNull('revoked_at')->count());
+    }
+
     public function test_non_administrative_member_cannot_manage_api_keys(): void
     {
         [$user, $organization] = $this->member(OrganizationRole::Developer);

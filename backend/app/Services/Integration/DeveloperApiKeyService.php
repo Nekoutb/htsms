@@ -19,21 +19,23 @@ final readonly class DeveloperApiKeyService
 
     public function issue(Organization $organization, User $creator, CreateApiKeyData $data): IssuedApiKey
     {
-        $this->subscriptions->ensureApiKeyAvailable($organization);
-        $prefix = Str::lower(Str::random(12));
-        $secret = bin2hex(random_bytes(32));
-        $plainTextKey = "htsms_live_{$prefix}_{$secret}";
+        return DB::transaction(function () use ($organization, $creator, $data): IssuedApiKey {
+            $this->subscriptions->ensureApiKeyAvailable($organization);
+            $prefix = Str::lower(Str::random(12));
+            $secret = bin2hex(random_bytes(32));
+            $plainTextKey = "htsms_live_{$prefix}_{$secret}";
 
-        $apiKey = $organization->developerApiKeys()->create([
-            'created_by_user_id' => $creator->getKey(),
-            'name' => $data->name,
-            'prefix' => $prefix,
-            'secret_hash' => hash('sha256', $plainTextKey),
-            'abilities' => $data->abilities,
-            'expires_at' => $data->expiresAt,
-        ]);
+            $apiKey = $organization->developerApiKeys()->create([
+                'created_by_user_id' => $creator->getKey(),
+                'name' => $data->name,
+                'prefix' => $prefix,
+                'secret_hash' => hash('sha256', $plainTextKey),
+                'abilities' => $data->abilities,
+                'expires_at' => $data->expiresAt,
+            ]);
 
-        return new IssuedApiKey($apiKey, $plainTextKey);
+            return new IssuedApiKey($apiKey, $plainTextKey);
+        });
     }
 
     public function revoke(DeveloperApiKey $apiKey): void

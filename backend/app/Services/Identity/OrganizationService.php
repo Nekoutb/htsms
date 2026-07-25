@@ -31,7 +31,7 @@ final readonly class OrganizationService
                 'role' => OrganizationRole::Owner,
                 'joined_at' => now(),
             ]);
-            $this->subscriptions->createTrial($organization);
+            $this->subscriptions->createFree($organization);
 
             return $organization;
         });
