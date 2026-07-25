@@ -11,4 +11,7 @@ return [
     'sign_out' => 'Se déconnecter',
     'support' => 'Service client',
     'language' => 'Langue',
+    'plan_free' => 'Gratuit',
+    'plan_starter' => 'Essentiel',
+    'plan_business' => 'Entreprise',
 ];

@@ -45,7 +45,10 @@ body{font-family:Archivo,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-s
 .channel-controls button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:7px 9px;font-size:10px;cursor:pointer}
 .channel-controls button.enabled{border-color:#98d3ad;color:#176343;background:#edf9f1}
 .onboard-grid{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:10px;align-items:end}
+.brand-lockup{align-items:center}.brand-lockup>span{display:grid!important;line-height:1.05}.brand-lockup b{font-size:11px;letter-spacing:.12em}.brand-lockup small{font-size:13px;letter-spacing:.22em;margin-top:4px;color:var(--green)}
+.sidebar .brand-lockup small{color:#fff}.message-body{min-width:260px;max-width:560px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.55}.reveal-link{border:0;background:transparent;color:var(--green);font-size:9px;font-weight:800;text-decoration:underline;cursor:pointer;padding:5px}
 :where(a,button,input,select,textarea,summary):focus-visible{outline:3px solid rgba(226,56,43,.35);outline-offset:3px}
 button,.button,.side-nav a,.lang-switch a{min-height:40px}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 @media(max-width:900px){.onboard-grid{grid-template-columns:1fr 1fr}.onboard-grid .button{grid-column:1/-1}}
+.admin-title{display:flex;align-items:end;justify-content:space-between;margin-bottom:28px}.admin-title h1{font-family:Georgia,serif;font-size:36px;margin:7px 0 0}.admin-marketing-link{display:inline-block;margin-top:7px;color:var(--green);font-size:10px;font-weight:800;text-decoration:underline}.password-form{max-width:560px}

@@ -13,10 +13,12 @@ use App\Services\Billing\SubscriptionService;
 use App\Services\Identity\OrganizationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -130,6 +132,21 @@ final class PlatformAdminController extends Controller
         $organization->forceFill([$column => ! $organization->{$column}])->save();
 
         return back()->with('status', ucfirst($channel).' messaging control updated.');
+    }
+
+    public function updatePassword(Request $request): RedirectResponse
+    {
+        $admin = $this->admin($request);
+        $data = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', PasswordRule::min(12)->mixedCase()->numbers()->symbols()],
+        ]);
+        $admin->forceFill(['password' => Hash::make($data['password'])])->save();
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->with('status', 'Password changed. Sign in again with your new password.');
     }
 
     private function admin(Request $request): User

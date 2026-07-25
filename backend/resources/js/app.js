@@ -22,6 +22,20 @@ document.querySelectorAll('[data-copy]').forEach((button) => {
     });
 });
 
+document.querySelectorAll('[data-reveal-number]').forEach((button) => {
+    button.addEventListener('click', () => {
+        const number = button.parentElement?.querySelector('[data-private-number]');
+        if (! number) return;
+        const revealing = button.dataset.revealed !== 'true';
+        if (! number.dataset.masked) number.dataset.masked = number.textContent;
+        number.textContent = revealing ? number.dataset.value : number.dataset.masked;
+        button.dataset.revealed = revealing ? 'true' : 'false';
+        button.textContent = revealing
+            ? (document.documentElement.lang === 'fr' ? 'Masquer' : 'Hide')
+            : (document.documentElement.lang === 'fr' ? 'Afficher' : 'Reveal');
+    });
+});
+
 document.querySelectorAll('[data-pairing-qr]').forEach((canvas) => {
     QRCode.toCanvas(canvas, canvas.dataset.pairingQr, {
         width: 220,

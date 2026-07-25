@@ -118,7 +118,7 @@ final class PortalController extends Controller
         $this->authorize('view', $organization);
 
         return view('portal.devices', $this->context($request, $organization) + [
-            'devices' => $organization->devices()->with('simSlots')->latest()->get(),
+            'devices' => $organization->devices()->whereNull('revoked_at')->with('simSlots')->latest()->get(),
         ]);
     }
 
@@ -143,7 +143,7 @@ final class PortalController extends Controller
             $device->forceFill(['revoked_at' => now()])->save();
         });
 
-        return back()->with('status', 'Device access revoked.');
+        return back()->with('status', 'Device removed from your account. Message history has been preserved.');
     }
 
     public function developer(Request $request, Organization $organization): View

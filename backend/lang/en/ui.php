@@ -11,4 +11,7 @@ return [
     'sign_out' => 'Sign out',
     'support' => 'Customer support',
     'language' => 'Language',
+    'plan_free' => 'Free',
+    'plan_starter' => 'Starter',
+    'plan_business' => 'Business',
 ];

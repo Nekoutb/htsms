@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Notifications\AdminMfaCode;
 use App\Services\Billing\SubscriptionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -111,6 +112,20 @@ final class PlatformAdminTest extends TestCase
         $this->actingAs($admin)->post('/admin/mfa/verify', ['code' => $code])->assertRedirect(route('admin.index'));
         $this->actingAs($admin)->get('/admin')->assertOk();
         $this->actingAs($admin)->post('/admin/mfa/verify', ['code' => $code])->assertSessionHasErrors('code');
+    }
+
+    public function test_admin_can_change_password_and_session_is_invalidated(): void
+    {
+        $admin = User::factory()->create(['is_platform_admin' => true, 'password' => 'OldPassword!123']);
+
+        $this->actingAs($admin)->withSession($this->verifiedSession($admin))->put('/admin/password', [
+            'current_password' => 'OldPassword!123',
+            'password' => 'NewSecurePassword!456',
+            'password_confirmation' => 'NewSecurePassword!456',
+        ])->assertRedirect(route('login'));
+
+        self::assertTrue(Hash::check('NewSecurePassword!456', $admin->refresh()->password));
+        $this->assertGuest();
     }
 
     /** @return array<string, int> */

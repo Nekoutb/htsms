@@ -8,14 +8,13 @@
 </head>
 <body class="portal">
 <aside class="sidebar">
-    <a class="brand" href="{{ route('portal.home') }}"><img src="{{ asset('brand/ea-mark.svg') }}" alt=""> <span>EA HTSMS</span></a>
+    <a class="brand brand-lockup" href="{{ route('portal.home') }}"><img src="{{ asset('brand/ea-mark.svg') }}" alt=""><span><b>ELITE ADVISORS</b><small>HTSMS</small></span></a>
     <div class="workspace"><small>{{ __('ui.workspace') }}</small><strong>{{ $organization->name }}</strong><span>{{ $organization->slug }}</span></div>
     <nav class="side-nav" aria-label="Primary">
         <a class="{{ request()->routeIs('portal.overview') ? 'active' : '' }}" href="{{ route('portal.overview',$organization) }}"><i>⌂</i>{{ __('ui.overview') }}</a>
         <a class="{{ request()->routeIs('portal.messages*') ? 'active' : '' }}" href="{{ route('portal.messages',$organization) }}"><i>↗</i>{{ __('ui.messages') }}</a>
         <a class="{{ request()->routeIs('portal.devices*') ? 'active' : '' }}" href="{{ route('portal.devices',$organization) }}"><i>▣</i>{{ __('ui.devices') }}</a>
         <a class="{{ request()->routeIs('portal.developer*') ? 'active' : '' }}" href="{{ route('portal.developer',$organization) }}"><i>⌘</i>{{ __('ui.developer') }}</a>
-        @can('manageMarketing',$organization)<a class="{{ request()->routeIs('portal.marketing*') ? 'active' : '' }}" href="{{ route('portal.marketing',$organization) }}"><i>◈</i>{{ __('ui.marketing') }}</a>@endcan
         <a class="{{ request()->routeIs('portal.billing*') ? 'active' : '' }}" href="{{ route('portal.billing',$organization) }}"><i>◇</i>{{ __('ui.billing') }}</a>
     </nav>
     <div class="side-user">

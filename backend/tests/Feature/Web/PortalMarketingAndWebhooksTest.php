@@ -20,41 +20,45 @@ final class PortalMarketingAndWebhooksTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_marketing_link_and_page_are_visible_to_owner(): void
+    public function test_marketing_is_available_only_from_platform_admin(): void
     {
-        [$user, $organization] = $this->membership();
+        [, $organization] = $this->membership();
+        $admin = User::factory()->create(['is_platform_admin' => true]);
+        $session = $this->verifiedSession($admin);
 
-        $this->actingAs($user)->get("/app/{$organization->getKey()}")
+        $this->actingAs($admin)->withSession($session)->get('/admin')
             ->assertOk()
             ->assertSee('Marketing');
 
-        $this->actingAs($user)->get("/app/{$organization->getKey()}/marketing")
+        $this->actingAs($admin)->withSession($session)->get("/admin/organizations/{$organization->getKey()}/marketing")
             ->assertOk()
             ->assertSee('Add a contact')
             ->assertSee('New campaign');
     }
 
-    public function test_viewer_cannot_see_or_open_marketing(): void
+    public function test_customer_portal_has_no_marketing_section(): void
     {
-        [$viewer, $organization] = $this->membership(OrganizationRole::Viewer);
+        [$owner, $organization] = $this->membership();
 
-        $this->actingAs($viewer)->get("/app/{$organization->getKey()}")
+        $this->actingAs($owner)->get("/app/{$organization->getKey()}")
             ->assertOk()
-            ->assertDontSee('href="'.route('portal.marketing', $organization).'"', false);
+            ->assertDontSee('Marketing');
 
-        $this->actingAs($viewer)->get("/app/{$organization->getKey()}/marketing")->assertForbidden();
+        $this->actingAs($owner)->get("/app/{$organization->getKey()}/marketing")->assertNotFound();
     }
 
-    public function test_campaign_manager_can_add_a_contact(): void
+    public function test_admin_can_add_a_marketing_contact(): void
     {
-        [$manager, $organization] = $this->membership(OrganizationRole::CampaignManager);
+        [, $organization] = $this->membership();
+        $admin = User::factory()->create(['is_platform_admin' => true]);
 
-        $this->actingAs($manager)->post("/app/{$organization->getKey()}/marketing/contacts", [
-            'phone' => '+237670000123',
-            'name' => 'Ada Lovelace',
-            'consent_status' => 'consented',
-            'consent_source' => 'Web signup form',
-        ])->assertRedirect(route('portal.marketing', $organization));
+        $this->actingAs($admin)->withSession($this->verifiedSession($admin))
+            ->post("/admin/organizations/{$organization->getKey()}/marketing/contacts", [
+                'phone' => '+237670000123',
+                'name' => 'Ada Lovelace',
+                'consent_status' => 'consented',
+                'consent_source' => 'Web signup form',
+            ])->assertRedirect(route('admin.marketing', $organization));
 
         $contact = Contact::query()->sole();
         self::assertSame('+237670000123', $contact->phone);
@@ -65,7 +69,8 @@ final class PortalMarketingAndWebhooksTest extends TestCase
     public function test_campaign_launch_queues_only_consented_contacts(): void
     {
         Queue::fake();
-        [$manager, $organization] = $this->membership(OrganizationRole::CampaignManager);
+        [, $organization] = $this->membership();
+        $admin = User::factory()->create(['is_platform_admin' => true]);
         $consented = Contact::query()->create([
             'organization_id' => $organization->getKey(), 'phone' => '+237670000001',
             'consent_status' => ConsentStatus::Consented, 'consented_at' => now(),
@@ -75,11 +80,12 @@ final class PortalMarketingAndWebhooksTest extends TestCase
             'consent_status' => ConsentStatus::Unknown,
         ]);
 
-        $this->actingAs($manager)->post("/app/{$organization->getKey()}/marketing/campaigns", [
-            'name' => 'July promo',
-            'content' => 'Hello from HTSMS',
-            'contact_ids' => [$consented->id, $unknown->id],
-        ])->assertRedirect(route('portal.marketing', $organization));
+        $this->actingAs($admin)->withSession($this->verifiedSession($admin))
+            ->post("/admin/organizations/{$organization->getKey()}/marketing/campaigns", [
+                'name' => 'July promo',
+                'content' => 'Hello from HTSMS',
+                'contact_ids' => [$consented->id, $unknown->id],
+            ])->assertRedirect(route('admin.marketing', $organization));
 
         $campaign = Campaign::query()->sole();
         self::assertSame(1, $campaign->recipient_count);
@@ -156,5 +162,11 @@ final class PortalMarketingAndWebhooksTest extends TestCase
         ]);
 
         return [$user, $organization];
+    }
+
+    /** @return array<string, int> */
+    private function verifiedSession(User $admin): array
+    {
+        return ['platform_admin_mfa_verified_at' => now()->getTimestamp(), 'platform_admin_mfa_user_id' => $admin->id];
     }
 }

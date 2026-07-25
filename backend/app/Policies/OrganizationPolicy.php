@@ -35,6 +35,10 @@ final class OrganizationPolicy
 
     public function manageMarketing(User $user, Organization $organization): bool
     {
+        if ($user->is_platform_admin) {
+            return true;
+        }
+
         $membership = $this->membership($user, $organization);
 
         return in_array($membership?->role, [

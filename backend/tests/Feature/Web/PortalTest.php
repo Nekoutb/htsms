@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Web;
 
 use App\Domain\Identity\OrganizationRole;
+use App\Models\Device;
 use App\Models\Message;
 use App\Models\Organization;
 use App\Models\User;
@@ -94,6 +95,21 @@ final class PortalTest extends TestCase
         [$developer, $developerOrganization] = $this->membership(OrganizationRole::Developer);
         $this->actingAs($developer)->post("/app/{$developerOrganization->getKey()}/devices/pair")
             ->assertForbidden();
+    }
+
+    public function test_owner_can_remove_device_without_deleting_its_record(): void
+    {
+        [$owner, $organization] = $this->membership();
+        $device = Device::factory()->for($organization)->create();
+
+        $this->actingAs($owner)->delete("/app/{$organization->getKey()}/devices/{$device->getKey()}")
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        self::assertNotNull($device->refresh()->revoked_at);
+        $this->actingAs($owner)->get("/app/{$organization->getKey()}/devices")
+            ->assertOk()
+            ->assertDontSee($device->name);
     }
 
     /** @return array{User, Organization} */

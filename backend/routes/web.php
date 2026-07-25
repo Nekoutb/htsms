@@ -52,9 +52,6 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::delete('/app/{organization}/developer/api-keys/{apiKey}', [PortalController::class, 'revokeApiKey'])->name('portal.api-keys.revoke');
     Route::post('/app/{organization}/developer/webhooks', [PortalController::class, 'createWebhook'])->name('portal.webhooks.store');
     Route::delete('/app/{organization}/developer/webhooks/{webhookEndpoint}', [PortalController::class, 'revokeWebhook'])->name('portal.webhooks.revoke');
-    Route::get('/app/{organization}/marketing', [MarketingController::class, 'index'])->name('portal.marketing');
-    Route::post('/app/{organization}/marketing/contacts', [MarketingController::class, 'storeContact'])->name('portal.contacts.store');
-    Route::post('/app/{organization}/marketing/campaigns', [MarketingController::class, 'storeCampaign'])->name('portal.campaigns.store');
     Route::get('/app/{organization}/billing', [BillingController::class, 'show'])->name('portal.billing');
     Route::post('/app/{organization}/billing/requests', [BillingController::class, 'requestChange'])->name('portal.billing.request');
 });
@@ -69,6 +66,10 @@ Route::prefix('admin')->middleware(['auth', 'verified', 'platform-admin'])->grou
     Route::get('/', [PlatformAdminController::class, 'index'])->name('admin.index');
     Route::post('/users', [PlatformAdminController::class, 'storeUser'])->name('admin.users.store');
     Route::delete('/users/{user}', [PlatformAdminController::class, 'destroyUser'])->name('admin.users.destroy');
+    Route::put('/password', [PlatformAdminController::class, 'updatePassword'])->name('admin.password.update');
+    Route::get('/organizations/{organization}/marketing', [MarketingController::class, 'index'])->name('admin.marketing');
+    Route::post('/organizations/{organization}/marketing/contacts', [MarketingController::class, 'storeContact'])->name('portal.contacts.store');
+    Route::post('/organizations/{organization}/marketing/campaigns', [MarketingController::class, 'storeCampaign'])->name('portal.campaigns.store');
     Route::post('/subscription-requests/{changeRequest}/approve', [PlatformAdminController::class, 'approve'])->name('admin.requests.approve');
     Route::post('/subscription-requests/{changeRequest}/reject', [PlatformAdminController::class, 'reject'])->name('admin.requests.reject');
     Route::post('/organizations/{organization}/pause', [PlatformAdminController::class, 'pause'])->name('admin.organizations.pause');

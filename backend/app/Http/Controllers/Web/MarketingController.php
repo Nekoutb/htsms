@@ -23,7 +23,7 @@ final class MarketingController extends Controller
     {
         $this->authorize('manageMarketing', $organization);
 
-        return view('portal.marketing', [
+        return view('admin.marketing', [
             'organization' => $organization,
             'user' => $this->user($request),
             'contacts' => $organization->contacts()->latest()->paginate(20),
@@ -44,7 +44,7 @@ final class MarketingController extends Controller
         $this->authorize('manageMarketing', $organization);
         $contacts->upsert($organization, $request->validated());
 
-        return redirect()->route('portal.marketing', $organization)
+        return redirect()->route('admin.marketing', $organization)
             ->with('status', 'Contact saved.');
     }
 
@@ -60,7 +60,7 @@ final class MarketingController extends Controller
             $request->date('send_at'),
         );
 
-        return redirect()->route('portal.marketing', $organization)
+        return redirect()->route('admin.marketing', $organization)
             ->with('status', 'Campaign launched. Consented, non-suppressed contacts are being queued.');
     }
 

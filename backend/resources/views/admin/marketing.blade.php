@@ -1,5 +1,6 @@
-@extends('layouts.portal')
+@extends('layouts.admin')
 @section('title','Marketing') @section('heading','Marketing')
+@section('actions')<a class="button small" href="{{ route('admin.index') }}">Admin dashboard</a>@endsection
 @section('content')
 <div class="metrics"><article><span>Contacts</span><strong>{{ number_format($contactStats['total']) }}</strong><small>All time</small></article><article><span>Consented</span><strong>{{ number_format($contactStats['consented']) }}</strong><small>Eligible to receive campaigns</small></article><article><span>Opted out</span><strong>{{ number_format($contactStats['opted_out']) }}</strong><small>Suppressed permanently</small></article></div>
 <div class="dashboard-grid">
