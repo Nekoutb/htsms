@@ -4,6 +4,11 @@
 @section('content')
 <p class="lead">Customer onboarding, subscriptions, messaging channels, marketing and account safety.</p>
 
+<section class="panel"><div class="panel-head"><div><span>Plan controls</span><h2>Change a workspace plan</h2></div></div>
+<div class="table-wrap"><table><thead><tr><th>Workspace</th><th>Current plan</th><th>New plan</th><th>Action</th></tr></thead><tbody>
+@foreach($organizations as $org)<tr><td>{{ $org->name }}</td><td>{{ $org->subscription?->plan ?? 'free' }}</td><td><form method="POST" action="{{ route('admin.organizations.plan',$org) }}" class="inline-form">@csrf @method('PUT')<select name="plan"><option value="free" @selected(($org->subscription?->plan ?? 'free') === 'free')>Free</option><option value="starter" @selected($org->subscription?->plan === 'starter')>Starter</option><option value="business" @selected($org->subscription?->plan === 'business')>Business</option></select></td><td><button class="button small">Save plan</button></form></td></tr>@endforeach
+</tbody></table></div></section>
+
 <section class="panel"><div class="panel-head"><div><span>Customer management</span><h2>Onboard a customer</h2></div></div>
 <form method="POST" action="{{ route('admin.users.store') }}" class="onboard-grid">@csrf
 <label>Name<input name="name" value="{{ old('name') }}" required></label>

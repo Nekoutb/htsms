@@ -112,6 +112,15 @@ final class PlatformAdminController extends Controller
         return back()->with('status', 'Plan request rejected.');
     }
 
+    public function updatePlan(Request $request, Organization $organization, SubscriptionService $subscriptions): RedirectResponse
+    {
+        $this->admin($request);
+        $data = $request->validate(['plan' => ['required', 'in:free,starter,business']]);
+        $subscriptions->activate($subscriptions->current($organization), $data['plan']);
+
+        return back()->with('status', 'Workspace plan updated successfully.');
+    }
+
     public function pause(Organization $organization): RedirectResponse
     {
         $organization->forceFill(['sending_paused_at' => $organization->sending_paused_at === null ? now() : null])->save();

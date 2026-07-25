@@ -74,6 +74,7 @@ Route::prefix('admin')->middleware(['auth', 'verified', 'platform-admin'])->grou
     Route::post('/subscription-requests/{changeRequest}/reject', [PlatformAdminController::class, 'reject'])->name('admin.requests.reject');
     Route::post('/organizations/{organization}/pause', [PlatformAdminController::class, 'pause'])->name('admin.organizations.pause');
     Route::post('/organizations/{organization}/suspend', [PlatformAdminController::class, 'suspend'])->name('admin.organizations.suspend');
+    Route::put('/organizations/{organization}/plan', [PlatformAdminController::class, 'updatePlan'])->name('admin.organizations.plan');
     Route::post('/organizations/{organization}/channels/{channel}', [PlatformAdminController::class, 'toggleChannel'])
         ->whereIn('channel', ['inbound', 'outbound'])->name('admin.organizations.channels');
 });
