@@ -32,7 +32,7 @@ final class DevicePairingController extends Controller
                 'id' => $issued->challenge->getKey(),
                 'pairing_token' => $issued->plainTextToken,
                 'pairing_code' => $issued->shortCode,
-                'pairing_uri' => 'htsms://pair?code='.$issued->shortCode,
+                'pairing_uri' => $issued->pairingUri(),
                 'expires_at' => $issued->challenge->expires_at->toIso8601String(),
             ],
             'meta' => ['message' => 'Scan the QR code or enter the 8-character code within 10 minutes. It can be used once.'],

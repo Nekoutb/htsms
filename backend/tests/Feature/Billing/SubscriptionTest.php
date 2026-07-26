@@ -18,20 +18,20 @@ final class SubscriptionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_new_workspace_receives_trial_subscription(): void
+    public function test_new_workspace_receives_free_subscription(): void
     {
         $organization = app(OrganizationService::class)->createForOwner(
             new CreateOrganizationData('Trial Business', 'trial-business', 'Africa/Douala', 'en'), User::factory()->create(),
         );
         $subscription = $organization->subscription()->sole();
-        self::assertSame('trial', $subscription->plan);
-        self::assertSame('trialing', $subscription->status);
-        self::assertTrue($subscription->trial_ends_at?->isFuture());
+        self::assertSame('free', $subscription->plan);
+        self::assertSame('active', $subscription->status);
+        self::assertNull($subscription->trial_ends_at);
     }
 
     public function test_quota_is_atomic_and_idempotent_replay_is_not_charged_twice(): void
     {
-        config()->set('htsms.plans.trial.messages', 1);
+        config()->set('htsms.plans.free.messages', 1);
         [$credential, $key] = $this->apiKey();
         $payload = ['to' => '+237670000005', 'content' => 'Plan controlled message'];
 

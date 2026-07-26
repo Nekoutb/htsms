@@ -24,8 +24,10 @@ final class AdminMfaCode extends Notification
     {
         return (new MailMessage)
             ->subject('Your HTSMS admin verification code')
+            ->greeting('Hello,')
             ->line('Use this one-time code to access the HTSMS platform administration area:')
             ->line($this->code)
-            ->line('This code expires in 10 minutes. If you did not request it, change your password immediately.');
+            ->line('This code expires in 10 minutes. If you did not request it, change your password immediately.')
+            ->salutation('— EA HTSMS');
     }
 }

@@ -28,6 +28,7 @@ class InboundSmsReceiver : BroadcastReceiver() {
         } else {
             intent.getIntExtra("slot", 0)
         }.coerceIn(0, 3)
+        if (!GatewayPreferences(context).incomingEnabled(slotIndex)) return
         val eventSource = "$sender|$receivedAt|$slotIndex|$content"
         val eventId = MessageDigest.getInstance("SHA-256").digest(eventSource.toByteArray()).joinToString("") { "%02x".format(it) }
         val payload = JSONObject()
@@ -38,11 +39,17 @@ class InboundSmsReceiver : BroadcastReceiver() {
             .put("received_at", Instant.ofEpochMilli(receivedAt).toString())
             .put("sim_slot_index", slotIndex)
         val pendingResult = goAsync()
-        Executors.newSingleThreadExecutor().execute {
+        val applicationContext = context.applicationContext
+        worker.execute {
             try {
-                runCatching { GatewayApi(context).inbound(payload) }
-                    .onFailure { PendingInboundStore(context).add(payload) }
+                runCatching { GatewayApi(applicationContext).inbound(payload) }
+                    .onFailure { PendingInboundStore(applicationContext).add(payload) }
             } finally { pendingResult.finish() }
         }
+    }
+
+    companion object {
+        // One shared worker; a fresh pool per broadcast leaked threads under bursty inbound traffic.
+        private val worker = Executors.newSingleThreadExecutor()
     }
 }

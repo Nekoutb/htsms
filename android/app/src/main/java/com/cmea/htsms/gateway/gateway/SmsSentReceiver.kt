@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.cmea.htsms.gateway.data.GatewayPreferences
 import com.cmea.htsms.gateway.network.GatewayApi
 import java.util.concurrent.Executors
 
@@ -26,7 +27,10 @@ class SmsSentReceiver : BroadcastReceiver() {
                         if (progress.complete) state.edit().remove(key).apply() else state.edit().putInt(key, progress.storedCount).apply()
                         progress.complete
                     }
-                    if (completed) GatewayApi(context).status(messageId, "sent")
+                    if (completed) {
+                        GatewayPreferences(context).incrementSentToday()
+                        GatewayApi(context).status(messageId, "sent")
+                    }
                 }
             } finally { pending.finish() }
         }

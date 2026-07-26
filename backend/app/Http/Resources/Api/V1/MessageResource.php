@@ -20,6 +20,7 @@ final class MessageResource extends JsonResource
             'content' => $this->body,
             'status' => $this->status->value,
             'device_id' => $this->device_id,
+            'sim_slot_index' => $this->preferred_sim_slot,
             'scheduled_at' => $this->scheduled_at?->toIso8601String(),
             'sent_at' => $this->sent_at?->toIso8601String(),
             'delivered_at' => $this->delivered_at?->toIso8601String(),

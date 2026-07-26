@@ -31,13 +31,13 @@ jobs:
       - run: cp .env.example .env && php artisan key:generate
       - run: touch database/database.sqlite
       - run: php artisan migrate --force
+      - run: npm ci
+      - run: npm run build
       - run: php artisan test
       - run: vendor/bin/phpstan analyse --memory-limit=1G
       - run: vendor/bin/pint --test
       - run: composer audit
-      - run: npm ci
       - run: npm audit --audit-level=high
-      - run: npm run build
 
   android:
     runs-on: ubuntu-latest

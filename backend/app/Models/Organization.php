@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property string $id
  * @property string $name
  * @property string $slug
+ * @property bool $inbound_enabled
+ * @property bool $outbound_enabled
  * @property CarbonImmutable|null $sending_paused_at
  * @property CarbonImmutable|null $suspended_at
  */
@@ -36,7 +38,12 @@ final class Organization extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['sending_paused_at' => 'immutable_datetime', 'suspended_at' => 'immutable_datetime'];
+        return [
+            'inbound_enabled' => 'boolean',
+            'outbound_enabled' => 'boolean',
+            'sending_paused_at' => 'immutable_datetime',
+            'suspended_at' => 'immutable_datetime',
+        ];
     }
 
     /**

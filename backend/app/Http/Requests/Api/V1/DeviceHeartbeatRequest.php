@@ -23,7 +23,10 @@ final class DeviceHeartbeatRequest extends FormRequest
             'app_version' => ['required', 'string', 'max:40'],
             'android_version' => ['required', 'string', 'max:40'],
             'battery_percent' => ['required', 'integer', 'between:0,100'],
-            'connection_type' => ['required', Rule::in(['wifi', 'cellular', 'ethernet', 'other'])],
+            // v0.2 used Android's legacy typeName ("mobile"), while v0.3
+            // normalizes that transport to "cellular". Accept both so existing
+            // paired gateways remain healthy while customers upgrade.
+            'connection_type' => ['required', Rule::in(['wifi', 'mobile', 'cellular', 'ethernet', 'offline', 'other'])],
             'fcm_token' => ['nullable', 'string', 'max:4096'],
             'sims' => ['required', 'array', 'min:1', 'max:4'],
             'sims.*.slot_index' => ['required', 'integer', 'min:0', 'max:3', 'distinct'],

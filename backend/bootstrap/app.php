@@ -6,6 +6,7 @@ use App\Http\Middleware\AuthenticateDevice;
 use App\Http\Middleware\RequireDeveloperApiKeyAbility;
 use App\Http\Middleware\RequirePlatformAdmin;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -21,6 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->append(SecurityHeaders::class);
+        $middleware->web(append: [SetLocale::class]);
+        $middleware->redirectUsersTo(fn (): string => route('portal.home'));
         $middleware->trustProxies(
             at: ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16'],
             headers: Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_HOST | Request::HEADER_X_FORWARDED_PORT | Request::HEADER_X_FORWARDED_PROTO,

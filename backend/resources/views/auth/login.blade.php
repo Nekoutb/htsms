@@ -7,5 +7,6 @@
 <label>Password<input type="password" name="password" autocomplete="current-password" required></label>
 @if($errors->any())<div class="form-error">{{ $errors->first() }}</div>@endif
 <button class="button full" type="submit">Sign in</button></form>
+<p class="form-foot"><a href="{{ route('password.request') }}">Forgot your password?</a></p>
 <p class="form-foot">New to HTSMS? <a href="{{ route('register') }}">Create an account</a></p>
 @endsection

@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Notifications\AdminMfaCode;
 use App\Services\Billing\SubscriptionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -55,6 +56,42 @@ final class PlatformAdminTest extends TestCase
         self::assertNotNull($organization->refresh()->suspended_at);
     }
 
+    public function test_admin_can_toggle_inbound_and_outbound_channels(): void
+    {
+        [, $organization] = $this->workspace();
+        $admin = User::factory()->create(['is_platform_admin' => true]);
+        $session = $this->verifiedSession($admin);
+
+        $this->actingAs($admin)->withSession($session)
+            ->post("/admin/organizations/{$organization->id}/channels/inbound")->assertRedirect();
+        $this->actingAs($admin)->withSession($session)
+            ->post("/admin/organizations/{$organization->id}/channels/outbound")->assertRedirect();
+
+        self::assertFalse($organization->refresh()->inbound_enabled);
+        self::assertFalse($organization->refresh()->outbound_enabled);
+    }
+
+    public function test_admin_can_onboard_and_delete_only_their_customer(): void
+    {
+        Notification::fake();
+        $admin = User::factory()->create(['is_platform_admin' => true]);
+        $session = $this->verifiedSession($admin);
+        $this->actingAs($admin)->withSession($session)->post('/admin/users', [
+            'name' => 'Invited Customer',
+            'email' => 'invited@example.com',
+            'business_name' => 'Invited Business',
+            'locale' => 'fr',
+        ])->assertRedirect();
+
+        $customer = User::query()->where('email', 'invited@example.com')->sole();
+        self::assertSame($admin->id, $customer->onboarded_by_user_id);
+        self::assertSame('free', $customer->organizations()->sole()->subscription()->sole()->plan);
+
+        $this->actingAs($admin)->withSession($session)
+            ->delete("/admin/users/{$customer->id}")->assertRedirect();
+        $this->assertDatabaseMissing('users', ['id' => $customer->id]);
+    }
+
     public function test_admin_requires_single_use_email_challenge(): void
     {
         Notification::fake();
@@ -75,6 +112,20 @@ final class PlatformAdminTest extends TestCase
         $this->actingAs($admin)->post('/admin/mfa/verify', ['code' => $code])->assertRedirect(route('admin.index'));
         $this->actingAs($admin)->get('/admin')->assertOk();
         $this->actingAs($admin)->post('/admin/mfa/verify', ['code' => $code])->assertSessionHasErrors('code');
+    }
+
+    public function test_admin_can_change_password_and_session_is_invalidated(): void
+    {
+        $admin = User::factory()->create(['is_platform_admin' => true, 'password' => 'OldPassword!123']);
+
+        $this->actingAs($admin)->withSession($this->verifiedSession($admin))->put('/admin/password', [
+            'current_password' => 'OldPassword!123',
+            'password' => 'NewSecurePassword!456',
+            'password_confirmation' => 'NewSecurePassword!456',
+        ])->assertRedirect(route('login'));
+
+        self::assertTrue(Hash::check('NewSecurePassword!456', $admin->refresh()->password));
+        $this->assertGuest();
     }
 
     /** @return array<string, int> */

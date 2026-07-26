@@ -8,7 +8,7 @@ final readonly class CreateOrganizationData
 {
     public function __construct(
         public string $name,
-        public string $slug,
+        public ?string $slug,
         public string $timezone,
         public string $locale,
     ) {}

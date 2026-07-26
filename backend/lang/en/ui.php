@@ -1,0 +1,18 @@
+<?php
+
+return [
+    'overview' => 'Overview',
+    'messages' => 'Messages',
+    'devices' => 'Devices',
+    'developer' => 'Developer',
+    'marketing' => 'Marketing',
+    'billing' => 'Plan & billing',
+    'settings' => 'Settings',
+    'workspace' => 'Workspace',
+    'sign_out' => 'Sign out',
+    'support' => 'Customer support',
+    'language' => 'Language',
+    'plan_free' => 'Free',
+    'plan_starter' => 'Starter',
+    'plan_business' => 'Business',
+];

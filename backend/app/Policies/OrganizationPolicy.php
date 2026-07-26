@@ -33,6 +33,31 @@ final class OrganizationPolicy
         return $membership?->role?->canManageMembers() === true;
     }
 
+    public function manageMarketing(User $user, Organization $organization): bool
+    {
+        if ($user->is_platform_admin) {
+            return true;
+        }
+
+        $membership = $this->membership($user, $organization);
+
+        return in_array($membership?->role, [
+            OrganizationRole::Owner,
+            OrganizationRole::Administrator,
+            OrganizationRole::CampaignManager,
+        ], true);
+    }
+
+    public function update(User $user, Organization $organization): bool
+    {
+        return $this->membership($user, $organization)?->role?->canManageMembers() === true;
+    }
+
+    public function delete(User $user, Organization $organization): bool
+    {
+        return $this->membership($user, $organization)?->role === OrganizationRole::Owner;
+    }
+
     private function membership(User $user, Organization $organization): ?OrganizationMembership
     {
         return OrganizationMembership::query()
