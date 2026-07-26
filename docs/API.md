@@ -10,7 +10,7 @@ curl -X POST https://htsms.cm-ea.com/api/v1/messages \
   -d '{"to":"+237670000000","content":"Your order is ready."}'
 ```
 
-Use E.164 destinations. Reuse an idempotency key only for the same logical request; replay returns the original message without consuming allowance twice. Statuses include `scheduled`, `queued`, `assigned`, `dispatched`, `sent`, `delivered`, `retry_pending`, `failed`, `expired`, and `cancelled`.
+Use E.164 destinations. Reuse an idempotency key only for the same logical request; replay returns the original message without consuming allowance twice. List messages with `GET /messages` (newest first, 50 per page); filter by delivery state with `?status=delivered`, `?status=failed`, etc. Statuses include `scheduled`, `queued`, `assigned`, `dispatched`, `sent`, `delivered`, `retry_pending`, `failed`, `expired`, and `cancelled`.
 
 Abilities include `messages:read`, `messages:write`, `contacts:read`, `contacts:write`, `campaigns:read`, `campaigns:write`, `webhooks:read`, and `webhooks:write`. Common errors: 401 invalid credential, 403 missing ability, 402 subscription restriction, 404 hidden/missing resource, 409 invalid state, 422 invalid input, 429 rate limit.
 

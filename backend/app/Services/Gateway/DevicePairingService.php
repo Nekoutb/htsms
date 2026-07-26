@@ -68,7 +68,8 @@ final readonly class DevicePairingService
                 'model' => $data['model'],
                 'android_version' => $data['android_version'],
                 'app_version' => $data['app_version'],
-                'fcm_token' => $data['fcm_token'],
+                // Nullable and may be omitted entirely by older gateway builds.
+                'fcm_token' => $data['fcm_token'] ?? null,
                 'last_seen_at' => now(),
             ]);
 

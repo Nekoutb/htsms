@@ -18,7 +18,9 @@ final readonly class DeviceHeartbeatService
             'android_version' => $data['android_version'],
             'battery_percent' => $data['battery_percent'],
             'connection_type' => $data['connection_type'],
-            'fcm_token' => $data['fcm_token'],
+            // Nullable fields may be omitted entirely by older gateway builds;
+            // validated() drops absent keys, so read them defensively.
+            'fcm_token' => $data['fcm_token'] ?? null,
             'last_seen_at' => now(),
         ])->save();
 
@@ -27,7 +29,11 @@ final readonly class DeviceHeartbeatService
             $reportedSlots[] = $sim['slot_index'];
             $device->simSlots()->updateOrCreate(
                 ['slot_index' => $sim['slot_index']],
-                $sim,
+                [
+                    'carrier_name' => $sim['carrier_name'] ?? null,
+                    'phone_number' => $sim['phone_number'] ?? null,
+                    'is_active' => $sim['is_active'],
+                ],
             );
         }
 

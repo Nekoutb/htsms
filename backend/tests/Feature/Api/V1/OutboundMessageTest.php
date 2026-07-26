@@ -35,6 +35,22 @@ final class OutboundMessageTest extends TestCase
         self::assertSame(1, Message::query()->sole()->events()->count());
     }
 
+    public function test_message_list_can_be_filtered_by_status(): void
+    {
+        [$apiCredential, $apiKey] = $this->apiKey(['messages:write', 'messages:read']);
+        $apiKey->organization->messages()->create(['recipient' => '+237670000002', 'body' => 'Done', 'status' => MessageStatus::Delivered]);
+        $apiKey->organization->messages()->create(['recipient' => '+237670000003', 'body' => 'Broke', 'status' => MessageStatus::Failed]);
+
+        $this->withToken($apiCredential)->getJson('/api/v1/messages?status=delivered')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.status', 'delivered');
+
+        $this->withToken($apiCredential)->getJson('/api/v1/messages?status=not-a-status')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('status');
+    }
+
     public function test_assigned_device_can_drive_message_through_delivery(): void
     {
         [$apiCredential, $apiKey] = $this->apiKey(['messages:write']);

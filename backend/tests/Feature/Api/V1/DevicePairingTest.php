@@ -43,6 +43,20 @@ final class DevicePairingTest extends TestCase
         $this->postJson('/api/v1/device/pair', $this->pairingPayload($token))->assertNotFound();
     }
 
+    public function test_pairing_without_optional_fcm_token_is_accepted(): void
+    {
+        [$user, $organization] = $this->owner();
+        Sanctum::actingAs($user, ['devices:write']);
+        $token = $this->postJson("/api/v1/organizations/{$organization->getKey()}/device-pairing-challenges")
+            ->assertCreated()->json('data.pairing_token');
+
+        $payload = $this->pairingPayload($token);
+        unset($payload['fcm_token']);
+
+        $this->postJson('/api/v1/device/pair', $payload)->assertCreated();
+        self::assertNull(Device::query()->sole()->fcm_token);
+    }
+
     public function test_expired_or_unknown_pairing_token_is_rejected(): void
     {
         $this->postJson('/api/v1/device/pair', $this->pairingPayload('htsms_pair_ABCD2345'))
@@ -90,6 +104,25 @@ final class DevicePairingTest extends TestCase
         self::assertSame('1.1.0', $device->fresh()?->app_version);
         self::assertSame('mobile', $device->fresh()?->connection_type);
         self::assertSame('+237670000000', $device->simSlots()->sole()->phone_number);
+    }
+
+    public function test_heartbeat_without_optional_fields_is_accepted(): void
+    {
+        [$credential, $device] = $this->pairedDevice();
+
+        // Older gateway builds omit fcm_token and unavailable SIM details
+        // entirely instead of sending explicit nulls.
+        $this->withToken($credential)->postJson('/api/v1/device/heartbeat', [
+            'app_version' => '0.2.0',
+            'android_version' => '13',
+            'battery_percent' => 45,
+            'connection_type' => 'wifi',
+            'sims' => [['slot_index' => 0, 'is_active' => true]],
+        ])->assertOk()
+            ->assertJsonPath('data.online', true);
+
+        self::assertNull($device->fresh()?->fcm_token);
+        self::assertNull($device->simSlots()->sole()->phone_number);
     }
 
     public function test_revoking_device_immediately_rejects_credential(): void

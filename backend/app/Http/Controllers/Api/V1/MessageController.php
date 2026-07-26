@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Messaging\MessageStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreMessageRequest;
 use App\Http\Resources\Api\V1\MessageResource;
@@ -12,6 +13,7 @@ use App\Models\Organization;
 use App\Services\Messaging\MessageSubmissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
 final class MessageController extends Controller
@@ -22,7 +24,14 @@ final class MessageController extends Controller
     {
         $organization = $request->attributes->get('organization');
         abort_unless($organization instanceof Organization, Response::HTTP_UNAUTHORIZED);
-        $messages = Message::query()->whereBelongsTo($organization)->latest()->paginate(50);
+        $validated = $request->validate([
+            'status' => ['sometimes', 'string', Rule::enum(MessageStatus::class)],
+        ]);
+        $messages = Message::query()
+            ->whereBelongsTo($organization)
+            ->when(isset($validated['status']), fn ($query) => $query->where('status', $validated['status']))
+            ->latest()
+            ->paginate(50);
 
         return MessageResource::collection($messages)->response();
     }
