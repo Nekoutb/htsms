@@ -7,6 +7,7 @@ return [
     'developer' => 'Developer',
     'marketing' => 'Marketing',
     'billing' => 'Plan & billing',
+    'settings' => 'Settings',
     'workspace' => 'Workspace',
     'sign_out' => 'Sign out',
     'support' => 'Customer support',

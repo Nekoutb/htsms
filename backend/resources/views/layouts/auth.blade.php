@@ -1,4 +1,4 @@
-<!doctype html><html lang="{{ app()->getLocale() }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>@yield('title') · EA HTSMS</title>@vite(['resources/css/app.css','resources/js/app.js'])</head>
+<!doctype html><html lang="{{ app()->getLocale() }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0c1f18"><link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml"><link rel="alternate icon" href="{{ asset('favicon.ico') }}"><title>@yield('title') · EA HTSMS</title>@vite(['resources/css/app.css','resources/js/app.js'])</head>
 <body class="auth-page">@php($fr = app()->isLocale('fr'))
 <a class="brand auth-brand" href="{{ route('home') }}"><img src="{{ asset('brand/ea-mark.svg') }}" alt=""><span>EA HTSMS</span></a>
 <div style="position:absolute;right:28px;top:28px;z-index:5" class="lang-switch"><a class="{{ !$fr ? 'active' : '' }}" href="{{ route('locale.switch','en') }}">EN</a><a class="{{ $fr ? 'active' : '' }}" href="{{ route('locale.switch','fr') }}">FR</a></div>

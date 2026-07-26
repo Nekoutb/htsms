@@ -48,6 +48,16 @@ final class OrganizationPolicy
         ], true);
     }
 
+    public function update(User $user, Organization $organization): bool
+    {
+        return $this->membership($user, $organization)?->role?->canManageMembers() === true;
+    }
+
+    public function delete(User $user, Organization $organization): bool
+    {
+        return $this->membership($user, $organization)?->role === OrganizationRole::Owner;
+    }
+
     private function membership(User $user, Organization $organization): ?OrganizationMembership
     {
         return OrganizationMembership::query()

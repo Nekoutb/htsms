@@ -52,3 +52,19 @@ button,.button,.side-nav a,.lang-switch a{min-height:40px}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 @media(max-width:900px){.onboard-grid{grid-template-columns:1fr 1fr}.onboard-grid .button{grid-column:1/-1}}
 .admin-title{display:flex;align-items:end;justify-content:space-between;margin-bottom:28px}.admin-title h1{font-family:Georgia,serif;font-size:36px;margin:7px 0 0}.admin-marketing-link{display:inline-block;margin-top:7px;color:var(--green);font-size:10px;font-weight:800;text-decoration:underline}.password-form{max-width:560px}
+
+/* Settings + lifecycle actions (WIP): status variants, action rows, reveal buttons, danger zone. */
+:root{--err:#c72f25;--fs-sm:.8125rem;--signal-bright:var(--lime)}
+.status.online,.status.active{background:#dff4e7;color:#176343}
+.status.offline,.status.disabled{background:#eceeec;color:#5c6862}
+.status.revoked{background:#f8dddd;color:#953e3b}
+.device-actions{display:flex;gap:14px;align-items:center}
+.device-card .device-actions{margin-top:2px}
+.reveal-btn{border:0;background:transparent;color:var(--green);font-size:9px;font-weight:800;text-decoration:underline;cursor:pointer;padding:2px 4px}
+.sim-number{display:inline-flex;align-items:center;gap:6px}
+.sim-number code{overflow-wrap:anywhere}
+.device-icon svg{width:18px;height:18px}
+.empty-state>div svg{width:34px;height:34px}
+.danger-details summary{cursor:pointer;list-style:none}
+.danger-details summary::-webkit-details-marker{display:none}
+.danger-details[open] summary{margin-bottom:4px}

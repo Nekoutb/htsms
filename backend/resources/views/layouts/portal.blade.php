@@ -3,6 +3,9 @@
 <head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#0c1f18">
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
     <title>@yield('title') · EA HTSMS</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -16,6 +19,7 @@
         <a class="{{ request()->routeIs('portal.devices*') ? 'active' : '' }}" href="{{ route('portal.devices',$organization) }}"><i>▣</i>{{ __('ui.devices') }}</a>
         <a class="{{ request()->routeIs('portal.developer*') ? 'active' : '' }}" href="{{ route('portal.developer',$organization) }}"><i>⌘</i>{{ __('ui.developer') }}</a>
         <a class="{{ request()->routeIs('portal.billing*') ? 'active' : '' }}" href="{{ route('portal.billing',$organization) }}"><i>◇</i>{{ __('ui.billing') }}</a>
+        <a class="{{ request()->routeIs('portal.settings*') ? 'active' : '' }}" href="{{ route('portal.settings',$organization) }}"><i>⚙</i>{{ __('ui.settings') }}</a>
     </nav>
     <div class="side-user">
         <div class="avatar">{{ mb_strtoupper(mb_substr($user->name,0,1)) }}</div>

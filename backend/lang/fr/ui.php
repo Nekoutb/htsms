@@ -7,6 +7,7 @@ return [
     'developer' => 'Développeur',
     'marketing' => 'Marketing',
     'billing' => 'Forfait et facturation',
+    'settings' => 'Paramètres',
     'workspace' => 'Espace de travail',
     'sign_out' => 'Se déconnecter',
     'support' => 'Service client',

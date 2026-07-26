@@ -146,6 +146,16 @@ final class PortalController extends Controller
         return back()->with('status', 'Device removed from your account. Message history has been preserved.');
     }
 
+    public function deleteDevice(Request $request, Organization $organization, Device $device): RedirectResponse
+    {
+        $this->authorize('manageDevices', $organization);
+        abort_unless($device->organization_id === $organization->getKey(), Response::HTTP_NOT_FOUND);
+        // Sent/received message rows keep their history; their device_id nulls out on delete.
+        $device->delete();
+
+        return redirect()->route('portal.devices', $organization)->with('status', 'Device permanently deleted.');
+    }
+
     public function developer(Request $request, Organization $organization): View
     {
         $this->authorize('manageApiKeys', $organization);
@@ -179,6 +189,15 @@ final class PortalController extends Controller
         return back()->with('status', 'Webhook endpoint disabled.');
     }
 
+    public function deleteWebhook(Request $request, Organization $organization, WebhookEndpoint $webhookEndpoint): RedirectResponse
+    {
+        $this->authorize('manageApiKeys', $organization);
+        abort_unless($webhookEndpoint->organization_id === $organization->getKey(), Response::HTTP_NOT_FOUND);
+        $webhookEndpoint->delete();
+
+        return redirect()->route('portal.developer', $organization)->with('status', 'Webhook endpoint permanently deleted.');
+    }
+
     public function createApiKey(StoreDeveloperApiKeyRequest $request, Organization $organization, DeveloperApiKeyService $apiKeys): RedirectResponse
     {
         $this->authorize('manageApiKeys', $organization);
@@ -196,6 +215,15 @@ final class PortalController extends Controller
         $apiKeys->revoke($apiKey);
 
         return back()->with('status', 'API key revoked.');
+    }
+
+    public function deleteApiKey(Request $request, Organization $organization, DeveloperApiKey $apiKey): RedirectResponse
+    {
+        $this->authorize('manageApiKeys', $organization);
+        abort_unless($apiKey->organization_id === $organization->getKey(), Response::HTTP_NOT_FOUND);
+        $apiKey->delete();
+
+        return redirect()->route('portal.developer', $organization)->with('status', 'API key permanently deleted.');
     }
 
     /** @return array{organization: Organization, organizations: Collection<int, Organization>, user: User} */
