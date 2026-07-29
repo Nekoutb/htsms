@@ -10,6 +10,7 @@ use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -108,7 +109,7 @@ final class SettingsController extends Controller
         return redirect()->route('home')->with('status', __('Your account has been deleted.'));
     }
 
-    /** @return \Illuminate\Support\Collection<int, string> */
+    /** @return Collection<int, string> */
     private function ownedWorkspacesWithOtherMembers(User $user)
     {
         return $user->organizations()
