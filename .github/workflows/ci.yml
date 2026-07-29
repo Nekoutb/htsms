@@ -27,8 +27,13 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: backend/package-lock.json
+      # The APP_KEY guard fires on every artisan boot (including composer's
+      # package:discover and key:generate itself), so seed a key into .env
+      # before anything boots the app.
+      - run: |
+          cp .env.example .env
+          php -r "file_put_contents('.env', preg_replace('/^APP_KEY=.*$/m', 'APP_KEY=base64:'.base64_encode(random_bytes(32)), file_get_contents('.env')));"
       - run: composer install --no-interaction --prefer-dist
-      - run: cp .env.example .env && php artisan key:generate
       - run: touch database/database.sqlite
       - run: php artisan migrate --force
       - run: npm ci
