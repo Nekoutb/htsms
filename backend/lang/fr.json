@@ -84,6 +84,7 @@
     "Workspace settings saved.": "Paramètres de l'espace enregistrés.",
     "You own workspaces with other members: :names. Transfer or delete them first.": "Vous possédez des espaces avec d'autres membres : :names. Transférez-les ou supprimez-les d'abord.",
     "Your account has been deleted.": "Votre compte a été supprimé.",
+    "Your session expired. Please sign in again.": "Votre session a expiré. Veuillez vous reconnecter.",
     "Your profile": "Votre profil",
     "active": "actif",
     "disabled": "désactivé",
