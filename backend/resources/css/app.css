@@ -72,3 +72,10 @@ button,.button,.side-nav a,.lang-switch a{min-height:40px}
 /* Developer quick-start: light code panel (was dark-on-dark after the EA reskin). */
 .code-panel pre{background:#f7f8f6;color:#22302a;border:1px solid var(--line);border-radius:9px}
 .code-panel pre code{color:inherit;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:inherit}
+
+/* Admin: inline plan control, accounts spacing, KPI strip polish. */
+.plan-inline{display:flex;gap:6px;margin-top:8px;align-items:center}
+.plan-inline select{width:auto;padding:6px 8px;font-size:11px}
+.plan-inline .button.small{padding:7px 10px;font-size:10px}
+.accounts-table{margin-top:18px;border-top:1px solid var(--line);padding-top:6px}
+.metrics article small{margin-top:2px}

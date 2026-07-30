@@ -6,6 +6,8 @@ namespace App\Http\Controllers\Web;
 
 use App\DTO\Identity\CreateOrganizationData;
 use App\Http\Controllers\Controller;
+use App\Models\InboundMessage;
+use App\Models\Message;
 use App\Models\Organization;
 use App\Models\SubscriptionChangeRequest;
 use App\Models\User;
@@ -27,9 +29,16 @@ final class PlatformAdminController extends Controller
     public function index(): View
     {
         return view('admin.index', [
-            'organizations' => Organization::query()->with(['subscription'])->withCount(['devices', 'messages'])->latest()->paginate(30),
+            'organizations' => Organization::query()->with(['subscription'])
+                ->withCount(['devices', 'messages', 'inboundMessages'])->latest()->paginate(30),
             'pendingRequests' => SubscriptionChangeRequest::query()->with('organization')->where('status', 'pending')->oldest()->get(),
             'accounts' => User::query()->withCount('memberships')->latest()->limit(100)->get(),
+            'stats' => [
+                'workspaces' => Organization::query()->count(),
+                'users' => User::query()->count(),
+                'outbound' => Message::query()->count(),
+                'inbound' => InboundMessage::query()->count(),
+            ],
         ]);
     }
 
