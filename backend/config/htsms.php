@@ -9,8 +9,8 @@ return [
         'business' => ['name' => 'Business', 'monthly_price_xaf' => 25000, 'messages' => 25000, 'devices' => 10, 'api_keys' => 20],
     ],
     'apk' => [
-        'version' => '0.3.1',
-        'path' => 'downloads/htsms-gateway-v0.3.1.apk',
-        'checksum_path' => 'downloads/htsms-gateway-v0.3.1.apk.sha256',
+        'version' => '0.3.2',
+        'path' => 'downloads/htsms-gateway-v0.3.2.apk',
+        'checksum_path' => 'downloads/htsms-gateway-v0.3.2.apk.sha256',
     ],
 ];
