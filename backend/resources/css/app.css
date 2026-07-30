@@ -68,3 +68,7 @@ button,.button,.side-nav a,.lang-switch a{min-height:40px}
 .danger-details summary{cursor:pointer;list-style:none}
 .danger-details summary::-webkit-details-marker{display:none}
 .danger-details[open] summary{margin-bottom:4px}
+
+/* Developer quick-start: light code panel (was dark-on-dark after the EA reskin). */
+.code-panel pre{background:#f7f8f6;color:#22302a;border:1px solid var(--line);border-radius:9px}
+.code-panel pre code{color:inherit;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:inherit}
