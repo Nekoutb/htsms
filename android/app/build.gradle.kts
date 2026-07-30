@@ -13,10 +13,25 @@ android {
         buildConfigField("String", "DEFAULT_API_URL", "\"https://htsms.cm-ea.com\"")
     }
     buildFeatures { buildConfig = true }
+    // Release signing comes from the environment (CI injects the keystore via
+    // secrets); without HTSMS_KEYSTORE_PATH the release build stays unsigned.
+    signingConfigs {
+        create("release") {
+            System.getenv("HTSMS_KEYSTORE_PATH")?.let { path ->
+                storeFile = file(path)
+                storePassword = System.getenv("HTSMS_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("HTSMS_KEY_ALIAS")
+                keyPassword = System.getenv("HTSMS_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (System.getenv("HTSMS_KEYSTORE_PATH") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
