@@ -17,6 +17,7 @@ import android.telephony.SubscriptionInfo
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import com.cmea.htsms.gateway.MainActivity
+import com.cmea.htsms.gateway.R
 import com.cmea.htsms.gateway.data.GatewayPreferences
 import com.cmea.htsms.gateway.data.PendingInboundStore
 import com.cmea.htsms.gateway.data.SimRepository
@@ -35,7 +36,7 @@ class GatewayService : Service() {
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         val content = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         startForeground(NOTIFICATION_ID, NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_notify_sync).setContentTitle("HTSMS gateway is online")
+            .setSmallIcon(R.drawable.ic_stat_htsms).setContentTitle("HTSMS gateway is online")
             .setContentText("Waiting securely for outbound messages").setOngoing(true).setContentIntent(content).build())
         running.set(true)
         executor.execute(::loop)
