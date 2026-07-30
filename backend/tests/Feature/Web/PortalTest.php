@@ -41,7 +41,7 @@ final class PortalTest extends TestCase
         $this->actingAs($user)->get("/app/{$organization->getKey()}/devices")
             ->assertOk()
             ->assertSee('Connect your phone in three steps')
-            ->assertSee('downloads/htsms-gateway-v0.2.0-beta.apk', false)
+            ->assertSee(config('htsms.apk.path'), false)
             ->assertSee('Scan QR code')
             ->assertSee('Android 8.0 or newer.');
     }

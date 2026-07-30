@@ -29,8 +29,7 @@ final class PlatformAdminController extends Controller
         return view('admin.index', [
             'organizations' => Organization::query()->with(['subscription'])->withCount(['devices', 'messages'])->latest()->paginate(30),
             'pendingRequests' => SubscriptionChangeRequest::query()->with('organization')->where('status', 'pending')->oldest()->get(),
-            'onboardedUsers' => User::query()->whereNotNull('onboarded_by_user_id')
-                ->withCount('memberships')->latest()->limit(50)->get(),
+            'accounts' => User::query()->withCount('memberships')->latest()->limit(100)->get(),
         ]);
     }
 
@@ -70,8 +69,8 @@ final class PlatformAdminController extends Controller
     public function destroyUser(Request $request, User $user): RedirectResponse
     {
         $admin = $this->admin($request);
-        abort_unless($user->onboarded_by_user_id === $admin->getKey(), Response::HTTP_FORBIDDEN);
         abort_if($user->is($admin), Response::HTTP_CONFLICT);
+        abort_if($user->is_platform_admin, Response::HTTP_FORBIDDEN);
 
         DB::transaction(function () use ($user, $admin): void {
             $soleOrganizations = $user->organizations()->withCount('memberships')->get()
@@ -82,10 +81,11 @@ final class PlatformAdminController extends Controller
             DB::table('subscription_change_requests')->where('requested_by_user_id', $user->getKey())
                 ->update(['requested_by_user_id' => $admin->getKey()]);
             $user->tokens()->delete();
+            $user->memberships()->delete();
             $user->delete();
         });
 
-        return back()->with('status', 'Onboarded customer account deleted.');
+        return back()->with('status', 'User account deleted. Solely-owned workspaces were removed; shared workspaces were kept.');
     }
 
     public function approve(Request $request, SubscriptionChangeRequest $changeRequest, SubscriptionService $subscriptions): RedirectResponse

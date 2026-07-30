@@ -71,7 +71,44 @@ final class PlatformAdminTest extends TestCase
         self::assertFalse($organization->refresh()->outbound_enabled);
     }
 
-    public function test_admin_can_onboard_and_delete_only_their_customer(): void
+    public function test_admin_can_delete_any_registered_user_with_their_solo_workspace(): void
+    {
+        [$owner, $organization] = $this->workspace();
+        $admin = User::factory()->create(['is_platform_admin' => true]);
+
+        $this->actingAs($admin)->withSession($this->verifiedSession($admin))
+            ->delete("/admin/users/{$owner->id}")->assertRedirect();
+
+        $this->assertDatabaseMissing('users', ['id' => $owner->id]);
+        $this->assertDatabaseMissing('organizations', ['id' => $organization->id]);
+    }
+
+    public function test_shared_workspaces_survive_member_deletion(): void
+    {
+        [$owner, $organization] = $this->workspace();
+        $second = User::factory()->create();
+        $organization->memberships()->create(['user_id' => $second->id, 'role' => OrganizationRole::Administrator, 'joined_at' => now()]);
+        $admin = User::factory()->create(['is_platform_admin' => true]);
+
+        $this->actingAs($admin)->withSession($this->verifiedSession($admin))
+            ->delete("/admin/users/{$owner->id}")->assertRedirect();
+
+        $this->assertDatabaseMissing('users', ['id' => $owner->id]);
+        $this->assertDatabaseHas('organizations', ['id' => $organization->id]);
+        self::assertSame(1, $organization->memberships()->count());
+    }
+
+    public function test_admin_and_self_accounts_cannot_be_deleted(): void
+    {
+        $admin = User::factory()->create(['is_platform_admin' => true]);
+        $other = User::factory()->create(['is_platform_admin' => true]);
+        $session = $this->verifiedSession($admin);
+
+        $this->actingAs($admin)->withSession($session)->delete("/admin/users/{$admin->id}")->assertStatus(409);
+        $this->actingAs($admin)->withSession($session)->delete("/admin/users/{$other->id}")->assertForbidden();
+    }
+
+    public function test_admin_can_onboard_and_delete_customer(): void
     {
         Notification::fake();
         $admin = User::factory()->create(['is_platform_admin' => true]);
