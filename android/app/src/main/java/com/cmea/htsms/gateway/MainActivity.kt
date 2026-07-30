@@ -7,7 +7,6 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
-import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
@@ -21,7 +20,6 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -90,7 +88,15 @@ class MainActivity : AppCompatActivity() {
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(38, 52, 38, 54)
             setBackgroundColor(BACKGROUND)
-            addView(TextView(context).apply { text = "▰\n▰\n▰"; textSize = 18f; gravity = Gravity.CENTER; setTextColor(RED); setTypeface(typeface, Typeface.BOLD); setLineSpacing(-8f, .72f) })
+            addView(LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                val density = resources.displayMetrics.density
+                fun bar(widthDp: Int, gapDp: Int) = View(context).apply {
+                    background = rounded(RED, 2f)
+                    layoutParams = LinearLayout.LayoutParams((widthDp * density).toInt(), (9 * density).toInt()).apply { topMargin = (gapDp * density).toInt() }
+                }
+                addView(bar(64, 0)); addView(bar(42, 5)); addView(bar(64, 5))
+            })
             addView(TextView(context).apply { text = "ELITE ADVISORS"; textSize = 12f; letterSpacing = .18f; setTextColor(Color.WHITE); setTypeface(typeface, Typeface.BOLD); setPadding(0, 14, 0, 0) })
             addView(TextView(context).apply { text = "HTSMS GATEWAY"; textSize = 19f; letterSpacing = .08f; setTextColor(Color.WHITE); setTypeface(typeface, Typeface.BOLD); setPadding(0, 4, 0, 0) })
             addView(TextView(context).apply { textSize = 22f; gravity = Gravity.CENTER; setPadding(0, 32, 0, 10); setTextColor(Color.WHITE); setTypeface(typeface, Typeface.BOLD) }.also { status = it })
@@ -268,10 +274,11 @@ class MainActivity : AppCompatActivity() {
         detail.text = "Your SIMs are ready to send and receive business messages."
         val sims = if (hasGatewayPermissions()) SimRepository(this).active() else emptyList()
         if (sims.isEmpty()) dashboard.addView(actionRow("No active SIM detected. Tap to review permissions.") { explainAndRequestPermissions() })
+        val simRepository = SimRepository(this)
         sims.forEach { sim ->
             dashboard.addView(gatewayCard().also { cardView ->
                 cardView.addView(TextView(this).apply {
-                    text = sim.number.takeIf { it.isNotBlank() } ?: "SIM ${sim.simSlotIndex + 1} · Number unavailable"
+                    text = simRepository.numberOf(sim) ?: "SIM ${sim.simSlotIndex + 1} · Number unavailable"
                     textSize = 22f
                     setTextColor(Color.WHITE)
                     setTypeface(typeface, Typeface.BOLD)
@@ -296,16 +303,6 @@ class MainActivity : AppCompatActivity() {
                 setOnClickListener { offerBatteryProtection() }
             })
         }
-        dashboard.addView(Button(this).apply {
-            text = "♥  Send heartbeat"
-            isAllCaps = false
-            setTextColor(Color.WHITE)
-            setTypeface(typeface, Typeface.BOLD)
-            background = rounded(BLUE, 28f)
-            layoutParams = fullWidth(14)
-            minHeight = 54
-            setOnClickListener { sendHeartbeatNow(it as Button) }
-        })
         dashboard.addView(TextView(this).apply {
             text = "${preferences.apiUrl.removePrefix("https://")}  ·  ${preferences.deviceId?.takeLast(8)}"
             textSize = 11f
@@ -338,6 +335,7 @@ class MainActivity : AppCompatActivity() {
             setOnClickListener { showingSettings = false; render() }
         })
         val sims = if (hasGatewayPermissions()) SimRepository(this).active() else emptyList()
+        val simRepository = SimRepository(this)
         sims.forEach { sim ->
             dashboard.addView(TextView(this).apply {
                 text = "SIM ${sim.simSlotIndex + 1}"
@@ -347,7 +345,7 @@ class MainActivity : AppCompatActivity() {
                 setPadding(0, 24, 0, 6)
             })
             dashboard.addView(gatewayCard().also { cardView ->
-                cardView.addView(settingsRow("Phone number", sim.number.takeIf { it.isNotBlank() } ?: "Unavailable"))
+                cardView.addView(settingsRow("Phone number", simRepository.numberOf(sim) ?: "Unavailable"))
                 cardView.addView(settingsRow("Network", sim.carrierName?.toString() ?: "Unknown"))
             })
             dashboard.addView(settingSwitch("Enable outgoing messages", preferences.outgoingEnabled(sim.simSlotIndex)) {
@@ -398,24 +396,6 @@ class MainActivity : AppCompatActivity() {
         isChecked = checked
         setPadding(0, 12, 0, 12)
         setOnCheckedChangeListener { _, enabled -> onChanged(enabled) }
-    }
-
-    private fun sendHeartbeatNow(button: Button) {
-        button.isEnabled = false
-        button.text = "Sending…"
-        executor.execute {
-            val battery = getSystemService(BatteryManager::class.java)
-                .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY).coerceIn(0, 100)
-            runCatching { GatewayApi(this).heartbeat(battery, "other") }
-                .onSuccess { preferences.lastSyncAt = System.currentTimeMillis() }
-                .also { result ->
-                    runOnUiThread {
-                        button.isEnabled = true
-                        button.text = "♥  Send heartbeat"
-                        Toast.makeText(this, if (result.isSuccess) "Heartbeat sent" else "Heartbeat could not be sent", Toast.LENGTH_SHORT).show()
-                    }
-                }
-        }
     }
 
     private fun rounded(color: Int, radiusDp: Float) = GradientDrawable().apply {
@@ -481,7 +461,6 @@ class MainActivity : AppCompatActivity() {
         private val SURFACE = Color.rgb(34, 37, 43)
         private val MUTED = Color.rgb(164, 168, 177)
         private val RED = Color.rgb(226, 56, 43)
-        private val BLUE = Color.rgb(47, 111, 190)
         private val SUCCESS = Color.rgb(129, 184, 98)
         private val WARNING = Color.rgb(220, 54, 96)
         private val GATEWAY_PERMISSIONS = arrayOf(Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_PHONE_NUMBERS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS)
