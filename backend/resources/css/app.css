@@ -1,7 +1,9 @@
 @import 'tailwindcss';
 @import './admin.css';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
+/* Compiled Blade output is NOT a source: it is generated from the .blade.php
+   files already scanned below, and scanning it made the bundle depend on
+   whatever happened to be cached (41.9kB clean vs 60.9kB warm). */
 @source '../**/*.blade.php';
 
 .support-link{color:var(--green);font-size:13px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
