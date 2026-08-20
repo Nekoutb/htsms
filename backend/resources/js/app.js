@@ -4,46 +4,21 @@ import { localizePage } from './translations';
 
 localizePage();
 
-/* --- Theme: follow system by default, allow a persisted manual override ---- */
-const THEME_KEY = 'htsms-theme';
-const applyTheme = (value) => {
-    if (value === 'light' || value === 'dark') {
-        document.documentElement.setAttribute('data-theme', value);
-    } else {
-        document.documentElement.removeAttribute('data-theme');
-    }
-};
-applyTheme(localStorage.getItem(THEME_KEY));
-document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
-    button.addEventListener('click', () => {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const current = document.documentElement.getAttribute('data-theme') || (prefersDark ? 'dark' : 'light');
-        const next = current === 'dark' ? 'light' : 'dark';
-        localStorage.setItem(THEME_KEY, next);
-        applyTheme(next);
-    });
-});
-
-/* --- Mobile navigation drawer --------------------------------------------- */
+/* --- Mobile navigation drawer ---------------------------------------------
+   Drives the marketing header nav and the portal sidebar; both collapse into
+   the same off-canvas panel below 720px (see .nav-toggle in app.css). */
+const navPanel = () => document.querySelector('.site-header nav, .sidebar');
 const setNav = (open) => {
     document.body.classList.toggle('nav-open', open);
     document.querySelectorAll('[data-nav-toggle]').forEach((b) => b.setAttribute('aria-expanded', String(open)));
+    document.querySelectorAll('.nav-scrim').forEach((s) => { s.hidden = ! open; });
+    if (open) navPanel()?.querySelector('a, button')?.focus();
 };
-document.querySelectorAll('[data-nav-toggle]').forEach((b) => b.addEventListener('click', () => setNav(!document.body.classList.contains('nav-open'))));
+document.querySelectorAll('[data-nav-toggle]').forEach((b) => b.addEventListener('click', () => setNav(! document.body.classList.contains('nav-open'))));
 document.querySelectorAll('[data-nav-close]').forEach((b) => b.addEventListener('click', () => setNav(false)));
-document.querySelectorAll('.side-nav a').forEach((a) => a.addEventListener('click', () => setNav(false)));
+document.querySelectorAll('.side-nav a, .site-header nav a').forEach((a) => a.addEventListener('click', () => setNav(false)));
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setNav(false); });
-
-/* --- Flash toasts: manual close + auto-dismiss ---------------------------- */
-const dismissToast = (toast) => {
-    toast.classList.add('leaving');
-    toast.addEventListener('animationend', () => toast.remove(), { once: true });
-    window.setTimeout(() => toast.remove(), 400);
-};
-document.querySelectorAll('.toast').forEach((toast) => {
-    toast.querySelector('[data-toast-close]')?.addEventListener('click', () => dismissToast(toast));
-    window.setTimeout(() => dismissToast(toast), 6000);
-});
+window.matchMedia('(min-width: 721px)').addEventListener('change', (e) => { if (e.matches) setNav(false); });
 
 /* --- Confirm-on-submit (CSP-safe replacement for inline onsubmit) ---------- */
 document.querySelectorAll('form[data-confirm]').forEach((form) => {

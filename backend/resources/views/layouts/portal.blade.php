@@ -1,17 +1,21 @@
 <!doctype html>
 <html lang="{{ app()->getLocale() }}">
 <head>
-    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="#0c1f18">
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
-    <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
-    <title>@yield('title') · EA HTSMS</title>
+    @include('partials.head', ['ogTitle' => trim($__env->yieldContent('title', 'EA HTSMS')).' · EA HTSMS', 'noindex' => true])
+    <title>@yield('title', __('ui.workspace')) · EA HTSMS</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="portal">
-<aside class="sidebar">
-    <a class="brand brand-lockup" href="{{ route('portal.home') }}"><img src="{{ asset('brand/ea-mark.svg') }}" alt=""><span><b>ELITE ADVISORS</b><small>HTSMS</small></span></a>
+<a class="skip-link" href="#portal-content">{{ __('ui.skip_to_content') }}</a>
+<header class="portal-topbar">
+    <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="portal-sidebar" aria-label="{{ __('ui.menu') }}"><span></span></button>
+    <a class="brand brand-lockup" href="{{ route('portal.overview',$organization) }}"><img src="{{ asset('brand/ea-mark.svg') }}" alt="" width="27" height="22"><span><b>ELITE ADVISORS</b><small>HTSMS</small></span></a>
+    <form method="POST" action="{{ route('logout') }}">@csrf<button class="topbar-signout" title="{{ __('ui.sign_out') }}" aria-label="{{ __('ui.sign_out') }}">↪</button></form>
+</header>
+<div class="nav-scrim" data-nav-close hidden></div>
+<aside class="sidebar" id="portal-sidebar">
+    <a class="brand brand-lockup" href="{{ route('portal.home') }}"><img src="{{ asset('brand/ea-mark.svg') }}" alt="" width="27" height="22"><span><b>ELITE ADVISORS</b><small>HTSMS</small></span></a>
+    <button class="nav-close" type="button" data-nav-close aria-label="{{ __('ui.close_menu') }}">✕</button>
     <div class="workspace"><small>{{ __('ui.workspace') }}</small><strong>{{ $organization->name }}</strong><span>{{ $organization->slug }}</span></div>
     <nav class="side-nav" aria-label="Primary">
         <a class="{{ request()->routeIs('portal.overview') ? 'active' : '' }}" href="{{ route('portal.overview',$organization) }}"><i>⌂</i>{{ __('ui.overview') }}</a>
@@ -27,10 +31,12 @@
         <form method="POST" action="{{ route('logout') }}">@csrf<button title="{{ __('ui.sign_out') }}" aria-label="{{ __('ui.sign_out') }}">↪</button></form>
     </div>
 </aside>
-<main class="portal-main">
+<main class="portal-main" id="portal-content">
     <header class="portal-top"><div><span class="breadcrumb">EA HTSMS / {{ $organization->name }}</span><h1>@yield('heading')</h1></div><div class="channel-controls"><div class="lang-switch" aria-label="{{ __('ui.language') }}"><a class="{{ app()->isLocale('en') ? 'active' : '' }}" href="{{ route('locale.switch','en') }}">EN</a><a class="{{ app()->isLocale('fr') ? 'active' : '' }}" href="{{ route('locale.switch','fr') }}">FR</a></div>@yield('actions')</div></header>
-    @if(session('status'))<div class="flash success">{{ session('status') }}</div>@endif
-    @if($errors->any())<div class="flash error">{{ $errors->first() }}</div>@endif
+    @if(session('status'))<div class="flash success" role="status">{{ session('status') }}</div>@endif
+    @if($errors->any())<div class="flash error" role="alert">{{ $errors->first() }}</div>@endif
     @yield('content')
+    <p class="portal-foot"><a href="mailto:{{ config('app.support_email') }}">{{ __('ui.support') }}</a>@if(config('app.support_phone')) · <a href="tel:{{ preg_replace('/[^0-9+]/', '', (string) config('app.support_phone')) }}">{{ config('app.support_phone') }}</a>@endif · © {{ date('Y') }} Elite Advisors</p>
 </main>
-</body></html>
+</body>
+</html>
