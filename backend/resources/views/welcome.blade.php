@@ -1,14 +1,19 @@
 <!doctype html>
-<html lang="{{ app()->getLocale() }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="EA HTSMS turns an Android phone and SIM into a secure programmable SMS gateway.">
+<html lang="{{ app()->getLocale() }}">
+<head>
+@include('partials.head', ['ogTitle' => 'EA HTSMS — ' . (app()->isLocale('fr') ? 'Votre SIM. Votre passerelle.' : 'Your SIM. Your gateway.')])
 <title>EA HTSMS — {{ app()->isLocale('fr') ? 'Votre SIM. Votre passerelle.' : 'Your SIM. Your gateway.' }}</title>
-@vite(['resources/css/app.css','resources/js/app.js'])</head>
+<link rel="canonical" href="{{ url('/') }}">
+@vite(['resources/css/app.css','resources/js/app.js'])
+</head>
 <body class="marketing">
 @php($fr = app()->isLocale('fr'))
-<header class="site-header wrap"><a class="brand" href="{{ route('home') }}"><img src="{{ asset('brand/ea-mark.svg') }}" alt=""><span>EA HTSMS</span></a><nav>
+<a class="skip-link" href="#main">{{ __('ui.skip_to_content') }}</a>
+<header class="site-header wrap"><a class="brand" href="{{ route('home') }}" aria-label="EA HTSMS — {{ __('ui.home') }}"><img src="{{ asset('brand/ea-mark.svg') }}" alt="" width="27" height="22"><span>EA HTSMS</span></a><button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="site-nav" aria-label="{{ __('ui.menu') }}"><span></span></button><nav id="site-nav" aria-label="{{ $fr ? 'Navigation principale' : 'Primary' }}"><button class="nav-close" type="button" data-nav-close aria-label="{{ __('ui.close_menu') }}">✕</button>
 <a href="#how">{{ $fr ? 'Fonctionnement' : 'How it works' }}</a><a href="#features">{{ $fr ? 'Fonctionnalités' : 'Features' }}</a><a href="#pricing">{{ $fr ? 'Tarifs' : 'Pricing' }}</a><a href="{{ asset(config('htsms.apk.path')) }}" download>Android</a><a href="{{ route('login') }}">{{ $fr ? 'Connexion' : 'Sign in' }}</a><div class="lang-switch"><a class="{{ !$fr ? 'active' : '' }}" href="{{ route('locale.switch','en') }}">EN</a><a class="{{ $fr ? 'active' : '' }}" href="{{ route('locale.switch','fr') }}">FR</a></div><a class="button small" href="{{ route('register') }}">{{ $fr ? 'Commencer' : 'Start building' }}</a>
 </nav></header>
-<main>
+<div class="nav-scrim" data-nav-close hidden></div>
+<main id="main">
 <section class="hero wrap"><div class="hero-copy"><div class="eyebrow">{{ $fr ? 'Conçu pour les entreprises camerounaises' : 'Built for businesses in Cameroon and beyond' }}</div><h1>{!! $fr ? 'Votre téléphone Android devient une <em>API SMS.</em>' : 'Your Android phone is now an <em>SMS API.</em>' !!}</h1><p>{{ $fr ? 'Connectez votre téléphone et votre SIM, envoyez des messages transactionnels via une API claire et suivez chaque livraison depuis un espace sécurisé.' : 'Connect your own phone and SIM, send transactional messages from a clean API, and monitor every delivery from one secure workspace.' }}</p><div class="hero-actions"><a class="button" href="{{ route('register') }}">{{ $fr ? 'Créer mon espace' : 'Create your workspace' }}</a><a class="text-link" href="#how">{{ $fr ? 'Voir le fonctionnement →' : 'See how it works →' }}</a></div><div class="trust-row"><span>{{ $fr ? 'Plateforme propriétaire' : 'Proprietary platform' }}</span><span>{{ $fr ? 'Compatible double SIM' : 'Dual-SIM ready' }}</span><span>{{ $fr ? 'Identifiants révocables' : 'Revocable credentials' }}</span></div></div>
 <div class="phone-stage"><div class="signal-card"><span class="signal-dot"></span><div><strong>EA Gateway</strong><small>Online · Orange CM</small></div><b>84%</b></div><div class="phone"><div class="phone-top"></div><div class="phone-screen"><div class="mini-brand">EA HTSMS Gateway</div><div class="gateway-ring"><span>{{ $fr ? 'Connecté' : 'Connected' }}</span><strong>128</strong><small>{{ $fr ? 'envoyés aujourd’hui' : 'sent today' }}</small></div><div class="sim-row"><div><small>SIM 1</small><b>Orange CM</b></div><div><small>Queue</small><b>3 messages</b></div></div></div></div><div class="delivery-card"><div class="check">✓</div><div><strong>{{ $fr ? 'Message livré' : 'Message delivered' }}</strong><small>+237 6•• ••• 418 · 2s</small></div></div></div></section>
 
@@ -22,5 +27,5 @@
 
 <section id="pricing" class="section wrap"><div class="section-heading"><span>{{ $fr ? 'Tarification claire' : 'Clear pricing' }}</span><h2>{{ $fr ? 'Commencez gratuitement, évoluez simplement.' : 'Start free, scale simply.' }}</h2></div><div class="steps">@foreach(config('htsms.plans') as $plan)@php($nf = fn ($n) => $fr ? number_format($n, 0, ',', ' ') : number_format($n))<article><b>{{ $nf($plan['monthly_price_xaf']) }} XAF</b><h3>{{ $plan['name'] }}</h3><p>{{ $nf($plan['messages']) }} messages · {{ $plan['devices'] }} Android · {{ $plan['api_keys'] }} {{ $fr ? ($plan['api_keys'] > 1 ? 'clés API' : 'clé API') : ($plan['api_keys'] > 1 ? 'API keys' : 'API key') }}</p></article>@endforeach</div></section>
 </main>
-<footer class="wrap"><a class="brand" href="/"><img src="{{ asset('brand/ea-mark.svg') }}" alt=""><span>EA HTSMS</span></a><a class="support-link" href="mailto:{{ config('app.support_email') }}">{{ __('ui.support') }}: {{ config('app.support_email') }}</a><p>© {{ date('Y') }} Elite Advisors. {{ $fr ? 'Logiciel propriétaire.' : 'Proprietary software.' }}</p></footer>
+@include('partials.site-footer')
 </body></html>

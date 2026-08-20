@@ -56,6 +56,9 @@ return [
 
     'support_email' => env('SUPPORT_EMAIL', 'contact@cm-ea.com'),
 
+    // Rendered as a tel: link in the footer and on error pages when set.
+    'support_phone' => env('SUPPORT_PHONE'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

@@ -12,6 +12,7 @@ use App\Http\Controllers\Web\WebEmailVerificationController;
 use App\Http\Controllers\Web\WebPasswordResetController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -22,6 +23,15 @@ Route::get('/language/{locale}', function (Request $request, string $locale): Re
     return back();
 })->name('locale.switch');
 Route::get('/health/ready', HealthController::class)->middleware('throttle:30,1');
+Route::get('/sitemap.xml', function (): Response {
+    $urls = [route('home'), route('login'), route('register')];
+    $body = '<?xml version="1.0" encoding="UTF-8"?>'
+        .'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        .implode('', array_map(fn (string $url): string => '<url><loc>'.e($url).'</loc></url>', $urls))
+        .'</urlset>';
+
+    return response($body, 200, ['Content-Type' => 'application/xml']);
+})->name('sitemap');
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [WebAuthenticationController::class, 'loginForm'])->name('login');
     Route::post('/login', [WebAuthenticationController::class, 'login'])->middleware('throttle:auth-login');
