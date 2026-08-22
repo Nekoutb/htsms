@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\HealthController;
-use App\Http\Controllers\Web\AdminMfaController;
 use App\Http\Controllers\Web\BillingController;
 use App\Http\Controllers\Web\MarketingController;
 use App\Http\Controllers\Web\PlatformAdminController;
@@ -73,12 +72,6 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::delete('/app/{organization}/settings/account', [SettingsController::class, 'destroyAccount'])->name('portal.settings.account.delete');
     Route::get('/app/{organization}/billing', [BillingController::class, 'show'])->name('portal.billing');
     Route::post('/app/{organization}/billing/requests', [BillingController::class, 'requestChange'])->name('portal.billing.request');
-});
-
-Route::prefix('admin/mfa')->middleware(['auth', 'verified', 'throttle:10,1'])->group(function (): void {
-    Route::get('/', [AdminMfaController::class, 'show'])->name('admin.mfa.show');
-    Route::post('/send', [AdminMfaController::class, 'send'])->name('admin.mfa.send');
-    Route::post('/verify', [AdminMfaController::class, 'verify'])->name('admin.mfa.verify');
 });
 
 Route::prefix('admin')->middleware(['auth', 'verified', 'platform-admin'])->group(function (): void {
