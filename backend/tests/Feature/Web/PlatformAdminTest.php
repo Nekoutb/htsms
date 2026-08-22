@@ -7,7 +7,6 @@ namespace Tests\Feature\Web;
 use App\Domain\Identity\OrganizationRole;
 use App\Models\Organization;
 use App\Models\User;
-use App\Notifications\AdminMfaCode;
 use App\Services\Billing\SubscriptionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -34,8 +33,8 @@ final class PlatformAdminTest extends TestCase
 
         $admin = User::factory()->create();
         $admin->forceFill(['is_platform_admin' => true])->save();
-        $this->actingAs($admin)->withSession($this->verifiedSession($admin))->get('/admin')->assertOk()->assertSee($organization->name);
-        $this->actingAs($admin)->withSession($this->verifiedSession($admin))->post("/admin/subscription-requests/{$change->id}/approve")
+        $this->actingAs($admin)->get('/admin')->assertOk()->assertSee($organization->name);
+        $this->actingAs($admin)->post("/admin/subscription-requests/{$change->id}/approve")
             ->assertRedirect();
 
         self::assertSame('approved', $change->refresh()->status);
@@ -50,9 +49,9 @@ final class PlatformAdminTest extends TestCase
         $admin = User::factory()->create();
         $admin->forceFill(['is_platform_admin' => true])->save();
 
-        $this->actingAs($admin)->withSession($this->verifiedSession($admin))->post("/admin/organizations/{$organization->id}/pause")->assertRedirect();
+        $this->actingAs($admin)->post("/admin/organizations/{$organization->id}/pause")->assertRedirect();
         self::assertNotNull($organization->refresh()->sending_paused_at);
-        $this->actingAs($admin)->withSession($this->verifiedSession($admin))->post("/admin/organizations/{$organization->id}/suspend")->assertRedirect();
+        $this->actingAs($admin)->post("/admin/organizations/{$organization->id}/suspend")->assertRedirect();
         self::assertNotNull($organization->refresh()->suspended_at);
     }
 
@@ -60,11 +59,10 @@ final class PlatformAdminTest extends TestCase
     {
         [, $organization] = $this->workspace();
         $admin = User::factory()->create(['is_platform_admin' => true]);
-        $session = $this->verifiedSession($admin);
 
-        $this->actingAs($admin)->withSession($session)
+        $this->actingAs($admin)
             ->post("/admin/organizations/{$organization->id}/channels/inbound")->assertRedirect();
-        $this->actingAs($admin)->withSession($session)
+        $this->actingAs($admin)
             ->post("/admin/organizations/{$organization->id}/channels/outbound")->assertRedirect();
 
         self::assertFalse($organization->refresh()->inbound_enabled);
@@ -76,7 +74,7 @@ final class PlatformAdminTest extends TestCase
         [$owner, $organization] = $this->workspace();
         $admin = User::factory()->create(['is_platform_admin' => true]);
 
-        $this->actingAs($admin)->withSession($this->verifiedSession($admin))
+        $this->actingAs($admin)
             ->delete("/admin/users/{$owner->id}")->assertRedirect();
 
         $this->assertDatabaseMissing('users', ['id' => $owner->id]);
@@ -90,7 +88,7 @@ final class PlatformAdminTest extends TestCase
         $organization->memberships()->create(['user_id' => $second->id, 'role' => OrganizationRole::Administrator, 'joined_at' => now()]);
         $admin = User::factory()->create(['is_platform_admin' => true]);
 
-        $this->actingAs($admin)->withSession($this->verifiedSession($admin))
+        $this->actingAs($admin)
             ->delete("/admin/users/{$owner->id}")->assertRedirect();
 
         $this->assertDatabaseMissing('users', ['id' => $owner->id]);
@@ -102,18 +100,16 @@ final class PlatformAdminTest extends TestCase
     {
         $admin = User::factory()->create(['is_platform_admin' => true]);
         $other = User::factory()->create(['is_platform_admin' => true]);
-        $session = $this->verifiedSession($admin);
 
-        $this->actingAs($admin)->withSession($session)->delete("/admin/users/{$admin->id}")->assertStatus(409);
-        $this->actingAs($admin)->withSession($session)->delete("/admin/users/{$other->id}")->assertForbidden();
+        $this->actingAs($admin)->delete("/admin/users/{$admin->id}")->assertStatus(409);
+        $this->actingAs($admin)->delete("/admin/users/{$other->id}")->assertForbidden();
     }
 
     public function test_admin_can_onboard_and_delete_customer(): void
     {
         Notification::fake();
         $admin = User::factory()->create(['is_platform_admin' => true]);
-        $session = $this->verifiedSession($admin);
-        $this->actingAs($admin)->withSession($session)->post('/admin/users', [
+        $this->actingAs($admin)->post('/admin/users', [
             'name' => 'Invited Customer',
             'email' => 'invited@example.com',
             'business_name' => 'Invited Business',
@@ -124,38 +120,16 @@ final class PlatformAdminTest extends TestCase
         self::assertSame($admin->id, $customer->onboarded_by_user_id);
         self::assertSame('free', $customer->organizations()->sole()->subscription()->sole()->plan);
 
-        $this->actingAs($admin)->withSession($session)
+        $this->actingAs($admin)
             ->delete("/admin/users/{$customer->id}")->assertRedirect();
         $this->assertDatabaseMissing('users', ['id' => $customer->id]);
-    }
-
-    public function test_admin_requires_single_use_email_challenge(): void
-    {
-        Notification::fake();
-        $admin = User::factory()->create();
-        $admin->forceFill(['is_platform_admin' => true])->save();
-
-        $this->actingAs($admin)->get('/admin')->assertRedirect(route('admin.mfa.show'));
-        $this->actingAs($admin)->post('/admin/mfa/send')->assertRedirect();
-        $code = null;
-        Notification::assertSentTo($admin, AdminMfaCode::class, function (AdminMfaCode $notification) use (&$code): bool {
-            $code = $notification->code;
-
-            return true;
-        });
-        self::assertIsString($code);
-
-        $this->actingAs($admin)->post('/admin/mfa/verify', ['code' => '000000'])->assertSessionHasErrors('code');
-        $this->actingAs($admin)->post('/admin/mfa/verify', ['code' => $code])->assertRedirect(route('admin.index'));
-        $this->actingAs($admin)->get('/admin')->assertOk();
-        $this->actingAs($admin)->post('/admin/mfa/verify', ['code' => $code])->assertSessionHasErrors('code');
     }
 
     public function test_admin_can_change_password_and_session_is_invalidated(): void
     {
         $admin = User::factory()->create(['is_platform_admin' => true, 'password' => 'OldPassword!123']);
 
-        $this->actingAs($admin)->withSession($this->verifiedSession($admin))->put('/admin/password', [
+        $this->actingAs($admin)->put('/admin/password', [
             'current_password' => 'OldPassword!123',
             'password' => 'NewSecurePassword!456',
             'password_confirmation' => 'NewSecurePassword!456',
@@ -163,12 +137,6 @@ final class PlatformAdminTest extends TestCase
 
         self::assertTrue(Hash::check('NewSecurePassword!456', $admin->refresh()->password));
         $this->assertGuest();
-    }
-
-    /** @return array<string, int> */
-    private function verifiedSession(User $admin): array
-    {
-        return ['platform_admin_mfa_verified_at' => now()->getTimestamp(), 'platform_admin_mfa_user_id' => $admin->id];
     }
 
     /** @return array{User, Organization} */

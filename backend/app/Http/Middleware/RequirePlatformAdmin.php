@@ -15,11 +15,6 @@ final class RequirePlatformAdmin
     public function handle(Request $request, Closure $next): Response
     {
         abort_unless($request->user() instanceof User && $request->user()->is_platform_admin, Response::HTTP_FORBIDDEN);
-        $verifiedAt = $request->session()->get('platform_admin_mfa_verified_at');
-        $verifiedUserId = $request->session()->get('platform_admin_mfa_user_id');
-        if (! is_int($verifiedAt) || $verifiedAt < now()->subHours(8)->getTimestamp() || $verifiedUserId !== $request->user()->getKey()) {
-            return redirect()->route('admin.mfa.show');
-        }
 
         return $next($request);
     }

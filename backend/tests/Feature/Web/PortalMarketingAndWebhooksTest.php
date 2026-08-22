@@ -24,13 +24,12 @@ final class PortalMarketingAndWebhooksTest extends TestCase
     {
         [, $organization] = $this->membership();
         $admin = User::factory()->create(['is_platform_admin' => true]);
-        $session = $this->verifiedSession($admin);
 
-        $this->actingAs($admin)->withSession($session)->get('/admin')
+        $this->actingAs($admin)->get('/admin')
             ->assertOk()
             ->assertSee('Marketing');
 
-        $this->actingAs($admin)->withSession($session)->get("/admin/organizations/{$organization->getKey()}/marketing")
+        $this->actingAs($admin)->get("/admin/organizations/{$organization->getKey()}/marketing")
             ->assertOk()
             ->assertSee('Add a contact')
             ->assertSee('New campaign');
@@ -52,7 +51,7 @@ final class PortalMarketingAndWebhooksTest extends TestCase
         [, $organization] = $this->membership();
         $admin = User::factory()->create(['is_platform_admin' => true]);
 
-        $this->actingAs($admin)->withSession($this->verifiedSession($admin))
+        $this->actingAs($admin)
             ->post("/admin/organizations/{$organization->getKey()}/marketing/contacts", [
                 'phone' => '+237670000123',
                 'name' => 'Ada Lovelace',
@@ -80,7 +79,7 @@ final class PortalMarketingAndWebhooksTest extends TestCase
             'consent_status' => ConsentStatus::Unknown,
         ]);
 
-        $this->actingAs($admin)->withSession($this->verifiedSession($admin))
+        $this->actingAs($admin)
             ->post("/admin/organizations/{$organization->getKey()}/marketing/campaigns", [
                 'name' => 'July promo',
                 'content' => 'Hello from HTSMS',
@@ -162,11 +161,5 @@ final class PortalMarketingAndWebhooksTest extends TestCase
         ]);
 
         return [$user, $organization];
-    }
-
-    /** @return array<string, int> */
-    private function verifiedSession(User $admin): array
-    {
-        return ['platform_admin_mfa_verified_at' => now()->getTimestamp(), 'platform_admin_mfa_user_id' => $admin->id];
     }
 }

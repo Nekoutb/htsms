@@ -28,7 +28,7 @@ cd deploy
 HTSMS_BOOTSTRAP_IMAGE=htsms:release-tag ./bootstrap-production-env.sh
 ```
 
-The bootstrap defaults email to the local log transport. Replace it with approved SMTP settings and validate delivery before allowing external registration or administrative MFA.
+The bootstrap defaults email to the local log transport. Replace it with approved SMTP settings and validate delivery before allowing external registration.
 
 ## Deployment behind an existing host Caddy
 
@@ -80,7 +80,7 @@ Create nightly custom-format `pg_dump` backups, encrypt them before off-host tra
 
 - `APP_DEBUG=false`; HTTPS/HSTS and security headers verified
 - PostgreSQL/Redis not exposed publicly
-- Named administrators use verified email and MFA before public launch
+- Named administrators use verified email and strong passwords before public launch
 - Alerts cover queue age, offline devices, webhook failures, database capacity, backups, and certificate expiry
 - Logs are centralized, access-controlled, and free of secrets/ordinary message content
 - Release APK is signed outside the repository with checksum and certificate fingerprint published

@@ -11,7 +11,7 @@ This checklist distinguishes the completed engineering MVP from the external gat
 ## Engineering acceptance completed
 
 - [x] Multi-tenant Laravel API and customer portal
-- [x] Registration, email verification, password reset, roles, API keys, and platform-admin email MFA
+- [x] Registration, email verification, password reset, roles, API keys, and platform-admin access control
 - [x] Android phone pairing, SIM inventory, heartbeat, outbound leasing, delivery status, and inbound SMS relay
 - [x] Contacts, consent records, suppressions, campaigns, quotas, scheduling, retries, and inbound opt-out handling
 - [x] Signed webhook delivery with retry and replay support
