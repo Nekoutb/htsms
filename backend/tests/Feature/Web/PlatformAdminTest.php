@@ -11,7 +11,9 @@ use App\Notifications\AdminMfaCode;
 use App\Services\Billing\SubscriptionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
+use RuntimeException;
 use Tests\TestCase;
 
 final class PlatformAdminTest extends TestCase
@@ -149,6 +151,18 @@ final class PlatformAdminTest extends TestCase
         $this->actingAs($admin)->post('/admin/mfa/verify', ['code' => $code])->assertRedirect(route('admin.index'));
         $this->actingAs($admin)->get('/admin')->assertOk();
         $this->actingAs($admin)->post('/admin/mfa/verify', ['code' => $code])->assertSessionHasErrors('code');
+    }
+
+    public function test_admin_mfa_send_surfaces_mail_failure_instead_of_a_server_error(): void
+    {
+        $admin = User::factory()->create();
+        $admin->forceFill(['is_platform_admin' => true])->save();
+        Mail::shouldReceive('mailer')->andThrow(new RuntimeException('mail transport unavailable'));
+
+        $this->actingAs($admin)->post('/admin/mfa/send')
+            ->assertRedirect()
+            ->assertSessionHasErrors('mfa');
+        self::assertNull(session('platform_admin_mfa_code_hash'));
     }
 
     public function test_admin_can_change_password_and_session_is_invalidated(): void

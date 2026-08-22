@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 final class AdminMfaController extends Controller
 {
@@ -40,7 +41,22 @@ final class AdminMfaController extends Controller
             'platform_admin_mfa_code_user_id' => $user->getKey(),
             'platform_admin_mfa_attempts' => 0,
         ]);
-        $user->notify(new AdminMfaCode($code));
+        try {
+            $user->notify(new AdminMfaCode($code));
+        } catch (Throwable $exception) {
+            // A mail-provider outage must never hard-fail the only route into
+            // platform administration. Discard the challenge the administrator
+            // cannot receive, report the cause, and explain it on the page.
+            report($exception);
+            $request->session()->forget([
+                'platform_admin_mfa_code_hash',
+                'platform_admin_mfa_code_expires_at',
+                'platform_admin_mfa_code_user_id',
+                'platform_admin_mfa_attempts',
+            ]);
+
+            return back()->withErrors(['mfa' => 'The verification code could not be sent. The email service rejected the request. Check the mail configuration, then try again.']);
+        }
         $this->audit->record(SecurityEvent::AdminMfaChallengeSent, $request, $user);
 
         return back()->with('status', 'A verification code was sent to your email.');
