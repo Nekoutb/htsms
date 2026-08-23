@@ -78,6 +78,7 @@ Route::prefix('admin')->middleware(['auth', 'verified', 'platform-admin'])->grou
     Route::get('/', [PlatformAdminController::class, 'index'])->name('admin.index');
     Route::post('/users', [PlatformAdminController::class, 'storeUser'])->name('admin.users.store');
     Route::delete('/users/{user}', [PlatformAdminController::class, 'destroyUser'])->name('admin.users.destroy');
+    Route::post('/admins', [PlatformAdminController::class, 'storeAdmin'])->name('admin.admins.store');
     Route::put('/password', [PlatformAdminController::class, 'updatePassword'])->name('admin.password.update');
     Route::get('/organizations/{organization}/marketing', [MarketingController::class, 'index'])->name('admin.marketing');
     Route::post('/organizations/{organization}/marketing/contacts', [MarketingController::class, 'storeContact'])->name('portal.contacts.store');

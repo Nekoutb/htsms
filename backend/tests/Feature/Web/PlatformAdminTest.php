@@ -125,6 +125,66 @@ final class PlatformAdminTest extends TestCase
         $this->assertDatabaseMissing('users', ['id' => $customer->id]);
     }
 
+    public function test_admin_can_create_a_platform_administrator(): void
+    {
+        $admin = User::factory()->create(['is_platform_admin' => true]);
+
+        $this->actingAs($admin)->post('/admin/admins', [
+            'name' => 'Co Manager',
+            'email' => 'comanager@example.com',
+            'password' => 'SuperSecret!123',
+            'password_confirmation' => 'SuperSecret!123',
+        ])->assertRedirect();
+
+        $created = User::query()->where('email', 'comanager@example.com')->sole();
+        self::assertTrue($created->is_platform_admin);
+        self::assertNotNull($created->email_verified_at);
+        self::assertSame($admin->id, $created->onboarded_by_user_id);
+        self::assertTrue(Hash::check('SuperSecret!123', $created->password));
+    }
+
+    public function test_creating_admin_with_existing_email_promotes_that_account(): void
+    {
+        $admin = User::factory()->create(['is_platform_admin' => true]);
+        $existing = User::factory()->create(['email' => 'existing@example.com', 'is_platform_admin' => false]);
+
+        $this->actingAs($admin)->post('/admin/admins', [
+            'name' => 'Ignored For Existing',
+            'email' => 'existing@example.com',
+            'password' => 'SuperSecret!123',
+            'password_confirmation' => 'SuperSecret!123',
+        ])->assertRedirect();
+
+        self::assertTrue($existing->refresh()->is_platform_admin);
+        self::assertTrue(Hash::check('SuperSecret!123', $existing->password));
+    }
+
+    public function test_non_admin_cannot_create_administrators(): void
+    {
+        $this->actingAs(User::factory()->create())->post('/admin/admins', [
+            'name' => 'Intruder',
+            'email' => 'intruder@example.com',
+            'password' => 'SuperSecret!123',
+            'password_confirmation' => 'SuperSecret!123',
+        ])->assertForbidden();
+
+        $this->assertDatabaseMissing('users', ['email' => 'intruder@example.com']);
+    }
+
+    public function test_weak_password_is_rejected_when_creating_an_administrator(): void
+    {
+        $admin = User::factory()->create(['is_platform_admin' => true]);
+
+        $this->actingAs($admin)->post('/admin/admins', [
+            'name' => 'Weak Admin',
+            'email' => 'weak@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])->assertSessionHasErrors('password');
+
+        $this->assertDatabaseMissing('users', ['email' => 'weak@example.com']);
+    }
+
     public function test_admin_can_change_password_and_session_is_invalidated(): void
     {
         $admin = User::factory()->create(['is_platform_admin' => true, 'password' => 'OldPassword!123']);
