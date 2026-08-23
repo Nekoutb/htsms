@@ -152,6 +152,30 @@ final class PlatformAdminController extends Controller
         return back()->with('status', ucfirst($channel).' messaging control updated.');
     }
 
+    public function storeAdmin(Request $request): RedirectResponse
+    {
+        $admin = $this->admin($request);
+        $data = $request->validate([
+            'name' => ['required', 'string', 'min:2', 'max:120'],
+            'email' => ['required', 'email:rfc', 'max:254'],
+            'password' => ['required', 'confirmed', PasswordRule::min(12)->letters()->mixedCase()->numbers()->symbols()],
+        ]);
+        $email = Str::lower($data['email']);
+        $existing = User::query()->where('email', $email)->first();
+        $user = $existing ?? new User(['name' => $data['name'], 'email' => $email]);
+        // The 'hashed' cast on the password attribute hashes the plain value on save.
+        $user->password = $data['password'];
+        $user->forceFill([
+            'is_platform_admin' => true,
+            'email_verified_at' => $user->email_verified_at ?? now(),
+            'onboarded_by_user_id' => $user->onboarded_by_user_id ?? $admin->getKey(),
+        ])->save();
+
+        return back()->with('status', $existing !== null
+            ? 'Existing account promoted to administrator; their password was updated.'
+            : 'Administrator created. They can sign in with the email and password you set.');
+    }
+
     public function updatePassword(Request $request): RedirectResponse
     {
         $admin = $this->admin($request);
