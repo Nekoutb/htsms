@@ -101,6 +101,74 @@ final class SitePresentationTest extends TestCase
             ->assertSee(route('login'), false);
     }
 
+    public function test_legal_pages_render_with_canonical_and_appear_in_sitemap(): void
+    {
+        foreach (['/terms' => 'Terms of Service', '/privacy' => 'Privacy Policy'] as $path => $heading) {
+            $this->get($path)->assertOk()
+                ->assertSee($heading)
+                ->assertSee('rel="canonical"', false)
+                ->assertSee(config('app.support_email'));
+        }
+
+        $this->get('/sitemap.xml')->assertOk()
+            ->assertSee(route('terms'), false)
+            ->assertSee(route('privacy'), false);
+    }
+
+    public function test_footer_links_to_terms_and_privacy(): void
+    {
+        $this->get('/')->assertOk()
+            ->assertSee(route('terms'), false)
+            ->assertSee(route('privacy'), false);
+    }
+
+    public function test_home_exposes_structured_data_and_a_social_image(): void
+    {
+        $this->get('/')->assertOk()
+            ->assertSee('application/ld+json', false)
+            ->assertSee('"@type":"Organization"', false)
+            ->assertSee('property="og:image"', false)
+            ->assertSee('brand/og-image.svg', false);
+    }
+
+    public function test_llms_txt_is_present_and_describes_the_site(): void
+    {
+        $path = public_path('llms.txt');
+        self::assertFileExists($path);
+        $contents = (string) file_get_contents($path);
+        self::assertStringContainsString('EA HTSMS', $contents);
+        self::assertStringContainsString('htsms.cm-ea.com', $contents);
+    }
+
+    public function test_turnstile_blocks_auth_when_configured_but_unsolved(): void
+    {
+        config()->set('services.turnstile.secret', 'test-secret');
+        config()->set('services.turnstile.site_key', 'test-site-key');
+
+        $this->post('/register', [
+            'name' => 'Bot Test',
+            'email' => 'bot@example.com',
+            'password' => 'SuperSecret!123',
+            'password_confirmation' => 'SuperSecret!123',
+        ])->assertSessionHasErrors('captcha');
+
+        $this->assertDatabaseMissing('users', ['email' => 'bot@example.com']);
+    }
+
+    public function test_turnstile_is_skipped_when_not_configured(): void
+    {
+        config()->set('services.turnstile.secret', '');
+
+        $this->post('/register', [
+            'name' => 'Real User',
+            'email' => 'real@example.com',
+            'password' => 'SuperSecret!123',
+            'password_confirmation' => 'SuperSecret!123',
+        ])->assertSessionDoesntHaveErrors('captcha');
+
+        $this->assertDatabaseHas('users', ['email' => 'real@example.com']);
+    }
+
     /** @return array{0: User, 1: Organization} */
     private function membership(): array
     {

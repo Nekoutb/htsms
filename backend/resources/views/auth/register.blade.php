@@ -9,6 +9,7 @@
 <label>Password<input type="password" name="password" autocomplete="new-password" required><small>12+ characters with uppercase, lowercase, number, and symbol.</small></label>
 <label>Confirm password<input type="password" name="password_confirmation" autocomplete="new-password" required></label>
 @if($errors->any())<div class="form-error">{{ $errors->first() }}</div>@endif
+@include('partials.turnstile')
 <button class="button full" type="submit">Create account and continue</button></form>
 <p class="form-foot">Already registered? <a href="{{ route('login') }}">Sign in</a></p>
 @endsection

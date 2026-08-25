@@ -1,15 +1,15 @@
 <!doctype html>
 <html lang="{{ app()->getLocale() }}">
 <head>
-@include('partials.head', ['ogTitle' => 'EA HTSMS — ' . (app()->isLocale('fr') ? 'Votre SIM. Votre passerelle.' : 'Your SIM. Your gateway.')])
-<title>EA HTSMS — {{ app()->isLocale('fr') ? 'Votre SIM. Votre passerelle.' : 'Your SIM. Your gateway.' }}</title>
+@include('partials.head', ['ogTitle' => 'EA HTSMS · ' . (app()->isLocale('fr') ? 'Votre SIM. Votre passerelle.' : 'Your SIM. Your gateway.')])
+<title>EA HTSMS · {{ app()->isLocale('fr') ? 'Votre SIM. Votre passerelle.' : 'Your SIM. Your gateway.' }}</title>
 <link rel="canonical" href="{{ url('/') }}">
 @vite(['resources/css/app.css','resources/js/app.js'])
 </head>
 <body class="marketing">
 @php($fr = app()->isLocale('fr'))
 <a class="skip-link" href="#main">{{ __('ui.skip_to_content') }}</a>
-<header class="site-header wrap"><a class="brand" href="{{ route('home') }}" aria-label="EA HTSMS — {{ __('ui.home') }}"><img src="{{ asset('brand/ea-mark.svg') }}" alt="" width="27" height="22"><span>EA HTSMS</span></a><button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="site-nav" aria-label="{{ __('ui.menu') }}"><span></span></button><nav id="site-nav" aria-label="{{ $fr ? 'Navigation principale' : 'Primary' }}"><button class="nav-close" type="button" data-nav-close aria-label="{{ __('ui.close_menu') }}">✕</button>
+<header class="site-header wrap"><a class="brand" href="{{ route('home') }}" aria-label="EA HTSMS · {{ __('ui.home') }}"><img src="{{ asset('brand/ea-mark.svg') }}" alt="" width="27" height="22"><span>EA HTSMS</span></a><button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="site-nav" aria-label="{{ __('ui.menu') }}"><span></span></button><nav id="site-nav" aria-label="{{ $fr ? 'Navigation principale' : 'Primary' }}"><button class="nav-close" type="button" data-nav-close aria-label="{{ __('ui.close_menu') }}">✕</button>
 <a href="#how">{{ $fr ? 'Fonctionnement' : 'How it works' }}</a><a href="#features">{{ $fr ? 'Fonctionnalités' : 'Features' }}</a><a href="#pricing">{{ $fr ? 'Tarifs' : 'Pricing' }}</a><a href="{{ asset(config('htsms.apk.path')) }}" download>Android</a><a href="{{ route('login') }}">{{ $fr ? 'Connexion' : 'Sign in' }}</a><div class="lang-switch"><a class="{{ !$fr ? 'active' : '' }}" href="{{ route('locale.switch','en') }}">EN</a><a class="{{ $fr ? 'active' : '' }}" href="{{ route('locale.switch','fr') }}">FR</a></div><a class="button small" href="{{ route('register') }}">{{ $fr ? 'Commencer' : 'Start building' }}</a>
 </nav></header>
 <div class="nav-scrim" data-nav-close hidden></div>

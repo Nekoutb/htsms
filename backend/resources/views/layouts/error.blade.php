@@ -7,7 +7,7 @@
 </head>
 <body class="error-page">
 <header class="site-header wrap">
-    <a class="brand" href="{{ route('home') }}" aria-label="EA HTSMS — {{ __('ui.home') }}"><img src="{{ asset('brand/ea-mark.svg') }}" alt="" width="27" height="22"><span>EA HTSMS</span></a>
+    <a class="brand" href="{{ route('home') }}" aria-label="EA HTSMS · {{ __('ui.home') }}"><img src="{{ asset('brand/ea-mark.svg') }}" alt="" width="27" height="22"><span>EA HTSMS</span></a>
     <div class="lang-switch" aria-label="{{ __('ui.language') }}"><a class="{{ app()->isLocale('en') ? 'active' : '' }}" href="{{ route('locale.switch','en') }}">EN</a><a class="{{ app()->isLocale('fr') ? 'active' : '' }}" href="{{ route('locale.switch','fr') }}">FR</a></div>
 </header>
 <main class="wrap error-shell">

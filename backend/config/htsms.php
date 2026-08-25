@@ -13,4 +13,7 @@ return [
         'path' => 'downloads/htsms-gateway-v0.3.2.apk',
         'checksum_path' => 'downloads/htsms-gateway-v0.3.2.apk.sha256',
     ],
+    'legal' => [
+        'updated' => env('HTSMS_LEGAL_UPDATED', 'August 2026'),
+    ],
 ];

@@ -15,5 +15,22 @@
 <meta property="og:url" content="{{ url()->current() }}">
 <meta property="og:title" content="{{ $ogTitle ?? 'EA HTSMS' }}">
 <meta property="og:description" content="{{ $description ?? __('ui.meta_description') }}">
-<meta property="og:image" content="{{ asset('brand/apple-touch-icon.png') }}">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="{{ asset('brand/og-image.svg') }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ $ogTitle ?? 'EA HTSMS' }}">
+<meta name="twitter:description" content="{{ $description ?? __('ui.meta_description') }}">
+<meta name="twitter:image" content="{{ asset('brand/og-image.svg') }}">
+@php($structuredData = [
+    '@context' => 'https://schema.org',
+    '@type' => 'Organization',
+    'name' => 'EA HTSMS',
+    'legalName' => 'Elite Advisors',
+    'url' => url('/'),
+    'logo' => asset('brand/apple-touch-icon.png'),
+    'description' => __('ui.meta_description'),
+    'email' => config('app.support_email'),
+    'areaServed' => 'CM',
+])
+<script type="application/ld+json">{!! json_encode($structuredData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
