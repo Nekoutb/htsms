@@ -1,0 +1,23 @@
+# EA HTSMS
+
+> HTSMS is a proprietary subscription SaaS that turns a customer-owned Android phone and SIM card into a tenant-isolated, programmable SMS gateway. Pair a device, issue scoped API keys, send transactional messages from a clean REST API, and track every delivery from a secure workspace.
+
+## About
+
+- Product: programmable SMS gateway built on customer-owned Android phones and SIM cards.
+- Audience: businesses in Cameroon and beyond that need transactional SMS.
+- Key capabilities: device pairing, scoped developer API keys, inbound and outbound messaging, signed webhooks, per-workspace isolation.
+- Languages: English and French.
+
+## Pages
+
+- [Home](https://htsms.cm-ea.com/): product overview, how it works, features, and pricing.
+- [Sign in](https://htsms.cm-ea.com/login): existing customer login.
+- [Create a workspace](https://htsms.cm-ea.com/register): new customer registration.
+- [Terms of Service](https://htsms.cm-ea.com/terms)
+- [Privacy Policy](https://htsms.cm-ea.com/privacy)
+
+## Contact
+
+- Email: contact@cm-ea.com
+- Operator: Elite Advisors

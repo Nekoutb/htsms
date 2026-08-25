@@ -7,6 +7,7 @@ use App\Http\Middleware\RequireDeveloperApiKeyAbility;
 use App\Http\Middleware\RequirePlatformAdmin;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\VerifyTurnstile;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'developer-ability' => RequireDeveloperApiKeyAbility::class,
             'device-auth' => AuthenticateDevice::class,
             'platform-admin' => RequirePlatformAdmin::class,
+            'turnstile' => VerifyTurnstile::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

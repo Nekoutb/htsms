@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    // Cloudflare Turnstile bot protection for signup and login forms.
+    // When the secret is empty the challenge is skipped, so the forms keep
+    // working until real keys are configured.
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret' => env('TURNSTILE_SECRET'),
+    ],
+
 ];

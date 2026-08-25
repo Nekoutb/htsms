@@ -15,6 +15,8 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+Route::view('/terms', 'legal.terms')->name('terms');
+Route::view('/privacy', 'legal.privacy')->name('privacy');
 Route::get('/language/{locale}', function (Request $request, string $locale): RedirectResponse {
     abort_unless(in_array($locale, ['en', 'fr'], true), 404);
     $request->session()->put('locale', $locale);
@@ -23,7 +25,7 @@ Route::get('/language/{locale}', function (Request $request, string $locale): Re
 })->name('locale.switch');
 Route::get('/health/ready', HealthController::class)->middleware('throttle:30,1');
 Route::get('/sitemap.xml', function (): Response {
-    $urls = [route('home'), route('login'), route('register')];
+    $urls = [route('home'), route('login'), route('register'), route('terms'), route('privacy')];
     $body = '<?xml version="1.0" encoding="UTF-8"?>'
         .'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
         .implode('', array_map(fn (string $url): string => '<url><loc>'.e($url).'</loc></url>', $urls))
@@ -33,9 +35,9 @@ Route::get('/sitemap.xml', function (): Response {
 })->name('sitemap');
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [WebAuthenticationController::class, 'loginForm'])->name('login');
-    Route::post('/login', [WebAuthenticationController::class, 'login'])->middleware('throttle:auth-login');
+    Route::post('/login', [WebAuthenticationController::class, 'login'])->middleware(['throttle:auth-login', 'turnstile']);
     Route::get('/register', [WebAuthenticationController::class, 'registerForm'])->name('register');
-    Route::post('/register', [WebAuthenticationController::class, 'register'])->middleware('throttle:auth-register');
+    Route::post('/register', [WebAuthenticationController::class, 'register'])->middleware(['throttle:auth-register', 'turnstile']);
     Route::get('/forgot-password', [WebPasswordResetController::class, 'request'])->name('password.request');
     Route::post('/forgot-password', [WebPasswordResetController::class, 'email'])->middleware('throttle:password-reset')->name('password.email');
     Route::get('/reset-password/{token}', [WebPasswordResetController::class, 'reset'])->name('password.reset');

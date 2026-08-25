@@ -6,6 +6,7 @@
 <label>Email address<input type="email" name="email" value="{{ old('email') }}" autocomplete="email" required autofocus></label>
 <label>Password<input type="password" name="password" autocomplete="current-password" required></label>
 @if($errors->any())<div class="form-error">{{ $errors->first() }}</div>@endif
+@include('partials.turnstile')
 <button class="button full" type="submit">Sign in</button></form>
 <p class="form-foot"><a href="{{ route('password.request') }}">Forgot your password?</a></p>
 <p class="form-foot">New to HTSMS? <a href="{{ route('register') }}">Create an account</a></p>
