@@ -13,7 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -76,14 +75,14 @@ final class SettingsController extends Controller
     {
         $this->authorize('view', $organization);
         $user = $this->user($request);
-        $request->validate(['password' => ['required', 'string']]);
-        if (! Hash::check($request->string('password')->toString(), $user->password)) {
-            throw ValidationException::withMessages(['password' => [__('That password is incorrect.')]]);
+        $request->validate(['confirm' => ['required', 'string']]);
+        if (mb_strtolower(trim($request->string('confirm')->toString())) !== mb_strtolower($user->email)) {
+            throw ValidationException::withMessages(['confirm' => [__('Type your email address exactly to confirm deletion.')]]);
         }
 
         $blocking = $this->ownedWorkspacesWithOtherMembers($user);
         if ($blocking->isNotEmpty()) {
-            throw ValidationException::withMessages(['password' => [
+            throw ValidationException::withMessages(['confirm' => [
                 __('You own workspaces with other members: :names. Transfer or delete them first.', ['names' => $blocking->implode(', ')]),
             ]]);
         }

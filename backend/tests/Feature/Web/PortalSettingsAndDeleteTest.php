@@ -82,18 +82,18 @@ final class PortalSettingsAndDeleteTest extends TestCase
         self::assertModelMissing($organization);
     }
 
-    public function test_account_deletion_requires_correct_password_and_removes_solo_workspace(): void
+    public function test_account_deletion_requires_matching_email_and_removes_solo_workspace(): void
     {
-        $user = User::factory()->create(['password' => 'Correct-Horse-99!']);
+        $user = User::factory()->create(['email' => 'owner@example.com']);
         $organization = Organization::factory()->create();
         $organization->memberships()->create(['user_id' => $user->getKey(), 'role' => OrganizationRole::Owner, 'joined_at' => now()]);
 
         $this->actingAs($user)->from("/app/{$organization->getKey()}/settings")
-            ->delete("/app/{$organization->getKey()}/settings/account", ['password' => 'wrong'])
-            ->assertSessionHasErrors('password');
+            ->delete("/app/{$organization->getKey()}/settings/account", ['confirm' => 'wrong@example.com'])
+            ->assertSessionHasErrors('confirm');
         self::assertModelExists($user);
 
-        $this->actingAs($user)->delete("/app/{$organization->getKey()}/settings/account", ['password' => 'Correct-Horse-99!'])
+        $this->actingAs($user)->delete("/app/{$organization->getKey()}/settings/account", ['confirm' => 'owner@example.com'])
             ->assertRedirect(route('home'));
         self::assertModelMissing($user);
         self::assertModelMissing($organization);

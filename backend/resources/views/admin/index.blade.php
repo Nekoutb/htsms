@@ -41,14 +41,10 @@
 </tbody></table></div></section>
 
 <section class="panel"><div class="panel-head"><div><span>Administrators</span><h2>Add platform administrator</h2></div></div>
-<p class="lead">Create a super administrator who can sign in and manage the whole platform. If the email already belongs to an account, that account is promoted to administrator and its password reset to the one you set here.</p>
+<p class="lead">Create a super administrator who can sign in and manage the whole platform. If the email already belongs to an account, that account is promoted. They sign in with a secure email link we send them — there is no password.</p>
 <form method="POST" action="{{ route('admin.admins.store') }}" class="onboard-grid">@csrf
 <label>Name<input name="name" value="{{ old('name') }}" required></label>
 <label>Email<input type="email" name="email" value="{{ old('email') }}" required></label>
-<label>Password<input type="password" name="password" autocomplete="new-password" minlength="12" required></label>
-<label>Confirm password<input type="password" name="password_confirmation" autocomplete="new-password" required></label>
 <button class="button">Create administrator</button></form>
-<small>Use at least 12 characters with uppercase, lowercase, a number and a symbol. The new administrator signs in with just this email and password.</small></section>
-
-<section class="panel"><div class="panel-head"><div><span>Security</span><h2>Change administrator password</h2></div></div><form method="POST" action="{{ route('admin.password.update') }}" class="stack-form compact password-form">@csrf @method('PUT')<label>Current password<input type="password" name="current_password" autocomplete="current-password" required></label><label>New password<input type="password" name="password" autocomplete="new-password" minlength="12" required><small>Use at least 12 characters with uppercase, lowercase, a number and a symbol.</small></label><label>Confirm new password<input type="password" name="password_confirmation" autocomplete="new-password" required></label><button class="button">Change password</button></form></section>
+<small>The new administrator receives a single-use sign-in link by email. No password is set or stored.</small></section>
 @endsection

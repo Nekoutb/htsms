@@ -9,26 +9,47 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\RegisterRequest;
 use App\Models\User;
 use App\Services\Identity\AuthenticationService;
+use App\Services\Identity\MagicLinkService;
 use App\Services\Identity\SecurityAuditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 final class WebAuthenticationController extends Controller
 {
     public function __construct(
         private readonly AuthenticationService $authentication,
+        private readonly MagicLinkService $magicLinks,
         private readonly SecurityAuditService $audit,
     ) {}
 
     public function loginForm(): View
     {
         return view('auth.login');
+    }
+
+    /**
+     * Email a single-use sign-in link. The response is identical whether or not
+     * an account exists, so it never reveals which emails are registered.
+     */
+    public function login(Request $request): RedirectResponse
+    {
+        $validated = $request->validate(['email' => ['required', 'email:rfc', 'max:254']]);
+        $email = Str::lower(trim((string) $validated['email']));
+
+        $this->magicLinks->sendTo($email, $request);
+        $this->audit->record(SecurityEvent::MagicLinkRequested, $request, metadata: [
+            'email_fingerprint' => $this->audit->emailFingerprint($email),
+        ]);
+
+        return redirect()->route('login.sent');
+    }
+
+    public function linkSent(): View
+    {
+        return view('auth.magic-sent');
     }
 
     public function registerForm(): View
@@ -39,45 +60,31 @@ final class WebAuthenticationController extends Controller
     public function register(RegisterRequest $request): RedirectResponse
     {
         $user = $this->authentication->register($request->toData());
-        $user->sendEmailVerificationNotification();
+        $this->magicLinks->sendTo($user->email, $request);
         $this->audit->record(SecurityEvent::Registered, $request, $user);
-        $this->audit->record(SecurityEvent::VerificationSent, $request, $user);
-        $request->session()->put('pending_verification_user_id', $user->getKey());
+        $this->audit->record(SecurityEvent::MagicLinkRequested, $request, $user);
+        $request->session()->put('pending_verification_email', $user->email);
 
         return redirect()->route('verification.notice')
-            ->with('status', 'Account created. We emailed you a verification link.');
+            ->with('status', 'Account created. We emailed you a sign-in link.');
     }
 
-    public function login(Request $request): RedirectResponse
+    /**
+     * Consume a magic link, sign the user in, and start a fresh session.
+     */
+    public function verify(Request $request, string $token): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email:rfc', 'max:254'],
-            'password' => ['required', 'string', 'max:1024'],
-        ]);
-        $email = Str::lower(trim((string) $credentials['email']));
-        $throttleKey = hash('sha256', $email.'|'.($request->ip() ?? 'unknown'));
-        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            throw ValidationException::withMessages(['email' => ['Too many sign-in attempts. Try again shortly.']]);
+        $user = $this->magicLinks->consume($token);
+        if (! $user instanceof User) {
+            return redirect()->route('login')->withErrors([
+                'email' => 'This sign-in link is invalid or has expired. Request a new one.',
+            ]);
         }
 
-        if (! Auth::attempt(['email' => $email, 'password' => $credentials['password'], 'email_verified_at' => fn ($query) => $query->whereNotNull('email_verified_at')], false)) {
-            $unverified = $this->unverifiedWithValidPassword($email, $credentials['password']);
-            if ($unverified !== null) {
-                $request->session()->put('pending_verification_user_id', $unverified->getKey());
-
-                return redirect()->route('verification.notice')
-                    ->with('status', 'Your password is correct, but this email is not verified yet. Verify it to continue.');
-            }
-
-            RateLimiter::hit($throttleKey, 60);
-            $this->audit->record(SecurityEvent::LoginFailed, $request, metadata: ['email_fingerprint' => $this->audit->emailFingerprint($email)]);
-            throw ValidationException::withMessages(['email' => ['The supplied credentials are invalid.']]);
-        }
-
-        RateLimiter::clear($throttleKey);
+        Auth::guard('web')->login($user);
         $request->session()->regenerate();
-        $request->session()->forget('pending_verification_user_id');
-        $user = $request->user();
+        $request->session()->forget('pending_verification_email');
+        $this->audit->record(SecurityEvent::MagicLinkConsumed, $request, $user);
         $this->audit->record(SecurityEvent::LoginSucceeded, $request, $user);
 
         return redirect()->intended(route('portal.home'));
@@ -92,19 +99,5 @@ final class WebAuthenticationController extends Controller
         $this->audit->record(SecurityEvent::LoggedOut, $request, $user);
 
         return redirect()->route('home');
-    }
-
-    /**
-     * Identify the account only when the caller already proved knowledge of
-     * the password, so the unverified-email hint never leaks account state.
-     */
-    private function unverifiedWithValidPassword(string $email, string $password): ?User
-    {
-        $user = User::query()->where('email', $email)->first();
-        if ($user === null || $user->hasVerifiedEmail() || ! Hash::check($password, $user->password)) {
-            return null;
-        }
-
-        return $user;
     }
 }

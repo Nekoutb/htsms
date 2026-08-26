@@ -17,7 +17,6 @@ use Laravel\Sanctum\HasApiTokens;
 /**
  * @property string $name
  * @property string $email
- * @property string $password
  * @property CarbonImmutable|null $email_verified_at
  * @property bool $is_platform_admin
  * @property int|null $onboarded_by_user_id
@@ -35,7 +34,6 @@ final class User extends Authenticatable implements MustVerifyEmailContract
     protected $fillable = [
         'name',
         'email',
-        'password',
     ];
 
     /**
@@ -44,7 +42,6 @@ final class User extends Authenticatable implements MustVerifyEmailContract
      * @var list<string>
      */
     protected $hidden = [
-        'password',
         'remember_token',
     ];
 
@@ -75,7 +72,6 @@ final class User extends Authenticatable implements MustVerifyEmailContract
     {
         return [
             'email_verified_at' => 'immutable_datetime',
-            'password' => 'hashed',
             'is_platform_admin' => 'boolean',
         ];
     }

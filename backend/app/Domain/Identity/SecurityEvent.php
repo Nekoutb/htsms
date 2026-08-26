@@ -12,6 +12,6 @@ enum SecurityEvent: string
     case LoggedOut = 'identity.logged_out';
     case VerificationSent = 'identity.verification_sent';
     case EmailVerified = 'identity.email_verified';
-    case PasswordResetRequested = 'identity.password_reset_requested';
-    case PasswordResetCompleted = 'identity.password_reset_completed';
+    case MagicLinkRequested = 'identity.magic_link_requested';
+    case MagicLinkConsumed = 'identity.magic_link_consumed';
 }

@@ -12,20 +12,19 @@ use App\Models\Organization;
 use App\Models\SubscriptionChangeRequest;
 use App\Models\User;
 use App\Services\Billing\SubscriptionService;
+use App\Services\Identity\MagicLinkService;
 use App\Services\Identity\OrganizationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
 final class PlatformAdminController extends Controller
 {
+    public function __construct(private readonly MagicLinkService $magicLinks) {}
+
     public function index(): View
     {
         return view('admin.index', [
@@ -55,7 +54,6 @@ final class PlatformAdminController extends Controller
             $user = new User([
                 'name' => $data['name'],
                 'email' => Str::lower($data['email']),
-                'password' => Hash::make(Str::password(48)),
             ]);
             $user->forceFill([
                 'email_verified_at' => now(),
@@ -70,9 +68,9 @@ final class PlatformAdminController extends Controller
 
             return $user;
         });
-        Password::sendResetLink(['email' => $user->email]);
+        $this->magicLinks->sendTo($user->email, $request);
 
-        return back()->with('status', 'Customer onboarded. A secure password setup link was emailed to them.');
+        return back()->with('status', 'Customer onboarded. A secure sign-in link was emailed to them.');
     }
 
     public function destroyUser(Request $request, User $user): RedirectResponse
@@ -158,37 +156,20 @@ final class PlatformAdminController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'min:2', 'max:120'],
             'email' => ['required', 'email:rfc', 'max:254'],
-            'password' => ['required', 'confirmed', PasswordRule::min(12)->letters()->mixedCase()->numbers()->symbols()],
         ]);
         $email = Str::lower($data['email']);
         $existing = User::query()->where('email', $email)->first();
         $user = $existing ?? new User(['name' => $data['name'], 'email' => $email]);
-        // The 'hashed' cast on the password attribute hashes the plain value on save.
-        $user->password = $data['password'];
         $user->forceFill([
             'is_platform_admin' => true,
             'email_verified_at' => $user->email_verified_at ?? now(),
             'onboarded_by_user_id' => $user->onboarded_by_user_id ?? $admin->getKey(),
         ])->save();
+        $this->magicLinks->sendTo($email, $request);
 
         return back()->with('status', $existing !== null
-            ? 'Existing account promoted to administrator; their password was updated.'
-            : 'Administrator created. They can sign in with the email and password you set.');
-    }
-
-    public function updatePassword(Request $request): RedirectResponse
-    {
-        $admin = $this->admin($request);
-        $data = $request->validate([
-            'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'confirmed', PasswordRule::min(12)->mixedCase()->numbers()->symbols()],
-        ]);
-        $admin->forceFill(['password' => Hash::make($data['password'])])->save();
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()->route('login')->with('status', 'Password changed. Sign in again with your new password.');
+            ? 'Existing account promoted to administrator; a sign-in link was emailed to them.'
+            : 'Administrator created. A sign-in link was emailed to them.');
     }
 
     private function admin(Request $request): User

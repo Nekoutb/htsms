@@ -36,7 +36,7 @@
 <article><div><strong>{{ __('Delete my account') }}</strong><small>{{ __('Removes your login and personal data. Workspaces you solely own are deleted with it; you must first transfer or delete workspaces shared with others.') }}</small></div>
 <details class="danger-details"><summary class="danger-link">{{ __('Delete account') }}</summary>
 <form method="POST" action="{{ route('portal.settings.account.delete',$organization) }}" class="stack-form compact" data-confirm="{{ __('Delete your account permanently?') }}" style="margin-top:12px">@csrf @method('DELETE')
-<label>{{ __('Confirm your password') }}<input type="password" name="password" autocomplete="current-password" required></label>
+<label>{{ __('Type your email address to confirm') }}<input type="email" name="confirm" autocomplete="off" placeholder="{{ auth()->user()?->email }}" required></label>
 <button class="button" style="background:var(--err)">{{ __('Permanently delete my account') }}</button></form></details></article>
 </div>
 </section>

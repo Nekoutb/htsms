@@ -7,128 +7,49 @@ namespace Tests\Feature\Api\V1;
 use App\Domain\Identity\SecurityEvent;
 use App\Models\SecurityAuditEvent;
 use App\Models\User;
-use Illuminate\Auth\Notifications\ResetPassword;
-use Illuminate\Auth\Notifications\VerifyEmail;
+use App\Notifications\LoginLinkNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 final class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_registration_requires_strong_password_and_sends_verification(): void
+    public function test_registration_is_passwordless_and_emails_a_sign_in_link(): void
     {
         Notification::fake();
 
-        $this->postJson('/api/v1/auth/register', [
-            'name' => 'A',
-            'email' => 'person@example.com',
-            'password' => 'weak',
-            'password_confirmation' => 'weak',
-        ])->assertUnprocessable()
-            ->assertJsonValidationErrors(['name', 'password']);
+        $this->postJson('/api/v1/auth/register', ['name' => 'A', 'email' => 'not-an-email'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['name', 'email']);
 
-        $response = $this->postJson('/api/v1/auth/register', [
+        $this->postJson('/api/v1/auth/register', [
             'name' => 'Kissy Tester',
             'email' => 'Person@Example.com',
-            'password' => 'Correct-Horse-99!',
-            'password_confirmation' => 'Correct-Horse-99!',
-        ])->assertCreated();
+        ])->assertCreated()
+            ->assertJsonStructure(['data' => ['user'], 'meta' => ['message']]);
 
         $user = User::query()->where('email', 'person@example.com')->sole();
-        self::assertTrue(Hash::check('Correct-Horse-99!', $user->password));
-        self::assertStringContainsString('|', $response->json('data.verification_token'));
-        Notification::assertSentTo($user, VerifyEmail::class);
+        self::assertNull($user->email_verified_at);
+        Notification::assertSentTo($user, LoginLinkNotification::class);
         $this->assertDatabaseHas('security_audit_events', ['event' => SecurityEvent::Registered->value]);
     }
 
-    public function test_login_uses_generic_failure_until_email_is_verified(): void
-    {
-        $user = User::factory()->unverified()->create(['password' => 'Correct-Horse-99!']);
-
-        foreach (['wrong-password', 'Correct-Horse-99!'] as $password) {
-            $this->postJson('/api/v1/auth/login', [
-                'email' => $user->email,
-                'password' => $password,
-                'device_name' => 'Dashboard',
-            ])->assertUnprocessable()
-                ->assertJsonPath('errors.email.0', 'The supplied credentials are invalid.');
-        }
-
-        $user->markEmailAsVerified();
-        $this->postJson('/api/v1/auth/login', [
-            'email' => $user->email,
-            'password' => 'Correct-Horse-99!',
-            'device_name' => 'Dashboard',
-        ])->assertOk()
-            ->assertJsonStructure(['data' => ['user', 'token']]);
-    }
-
-    public function test_signed_verification_marks_email_and_revokes_verification_token(): void
-    {
-        $user = User::factory()->unverified()->create();
-        $user->createToken('email-verification', ['email:verify']);
-        $url = URL::temporarySignedRoute('verification.verify', now()->addMinutes(30), [
-            'id' => $user->getKey(),
-            'hash' => sha1($user->getEmailForVerification()),
-        ]);
-
-        $this->getJson($url)->assertOk();
-
-        self::assertTrue($user->fresh()?->hasVerifiedEmail());
-        self::assertSame(0, $user->tokens()->count());
-    }
-
-    public function test_browser_verification_redirects_to_a_friendly_sign_in_confirmation(): void
-    {
-        $user = User::factory()->unverified()->create();
-        $url = URL::temporarySignedRoute('verification.verify', now()->addMinutes(30), [
-            'id' => $user->getKey(),
-            'hash' => sha1($user->getEmailForVerification()),
-        ]);
-
-        $this->get($url)->assertRedirect(route('login', ['verified' => 1]));
-
-        $this->get(route('login', ['verified' => 1]))
-            ->assertOk()
-            ->assertSee('Email address verified successfully. You can now sign in.');
-    }
-
-    public function test_invalid_verification_signature_is_rejected(): void
-    {
-        $user = User::factory()->unverified()->create();
-
-        $this->getJson("/api/v1/auth/email/verify/{$user->getKey()}/".sha1($user->email))
-            ->assertForbidden();
-    }
-
-    public function test_forgot_password_does_not_reveal_account_existence_and_reset_revokes_tokens(): void
+    public function test_requesting_a_link_never_reveals_whether_an_account_exists(): void
     {
         Notification::fake();
         $user = User::factory()->create();
-        $user->createToken('existing-session', ['profile:read']);
 
         foreach (['unknown@example.com', $user->email] as $email) {
-            $this->postJson('/api/v1/auth/forgot-password', ['email' => $email])
+            $this->postJson('/api/v1/auth/login', ['email' => $email])
                 ->assertOk()
-                ->assertJsonPath('meta.message', 'If the account exists, a password reset email has been sent.');
+                ->assertJsonPath('meta.message', 'If an account exists for that email, a sign-in link is on its way.');
         }
-        Notification::assertSentTo($user, ResetPassword::class);
 
-        $token = Password::createToken($user);
-        $this->postJson('/api/v1/auth/reset-password', [
-            'email' => $user->email,
-            'token' => $token,
-            'password' => 'New-Correct-Password-88!',
-            'password_confirmation' => 'New-Correct-Password-88!',
-        ])->assertOk();
-
-        self::assertTrue(Hash::check('New-Correct-Password-88!', $user->fresh()?->password ?? ''));
-        self::assertSame(0, $user->tokens()->count());
+        Notification::assertSentTo($user, LoginLinkNotification::class);
+        Notification::assertSentTimes(LoginLinkNotification::class, 1);
+        $this->assertDatabaseHas('security_audit_events', ['event' => SecurityEvent::MagicLinkRequested->value]);
     }
 
     public function test_logout_revokes_only_current_token(): void

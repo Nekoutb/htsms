@@ -20,7 +20,7 @@ final class SitePresentationTest extends TestCase
 
     public function test_every_public_page_has_title_description_and_icons(): void
     {
-        foreach (['/', '/login', '/register', '/forgot-password'] as $path) {
+        foreach (['/', '/login', '/register'] as $path) {
             $response = $this->get($path)->assertOk();
             $html = $response->getContent();
 
@@ -148,8 +148,6 @@ final class SitePresentationTest extends TestCase
         $this->post('/register', [
             'name' => 'Bot Test',
             'email' => 'bot@example.com',
-            'password' => 'SuperSecret!123',
-            'password_confirmation' => 'SuperSecret!123',
         ])->assertSessionHasErrors('captcha');
 
         $this->assertDatabaseMissing('users', ['email' => 'bot@example.com']);
@@ -162,8 +160,6 @@ final class SitePresentationTest extends TestCase
         $this->post('/register', [
             'name' => 'Real User',
             'email' => 'real@example.com',
-            'password' => 'SuperSecret!123',
-            'password_confirmation' => 'SuperSecret!123',
         ])->assertSessionDoesntHaveErrors('captcha');
 
         $this->assertDatabaseHas('users', ['email' => 'real@example.com']);

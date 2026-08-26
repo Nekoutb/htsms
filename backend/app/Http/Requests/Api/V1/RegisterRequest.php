@@ -6,7 +6,6 @@ namespace App\Http\Requests\Api\V1;
 
 use App\DTO\Identity\RegisterUserData;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Password;
 
 final class RegisterRequest extends FormRequest
 {
@@ -23,11 +22,6 @@ final class RegisterRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'min:2', 'max:120'],
             'email' => ['required', 'email:rfc', 'max:254', 'unique:users,email'],
-            'password' => [
-                'required',
-                'confirmed',
-                Password::min(12)->letters()->mixedCase()->numbers()->symbols(),
-            ],
         ];
     }
 
@@ -36,7 +30,6 @@ final class RegisterRequest extends FormRequest
         return new RegisterUserData(
             name: $this->string('name')->trim()->toString(),
             email: $this->string('email')->trim()->lower()->toString(),
-            password: $this->string('password')->toString(),
         );
     }
 }

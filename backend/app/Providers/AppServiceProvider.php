@@ -63,7 +63,9 @@ final class AppServiceProvider extends ServiceProvider
         RateLimiter::for('auth-register', static fn (Request $request): Limit => Limit::perHour(5)
             ->by($request->ip() ?? 'unknown'));
 
-        RateLimiter::for('password-reset', static fn (Request $request): Limit => Limit::perHour(5)
+        // Verifying a magic link: the 256-bit token makes guessing infeasible,
+        // but throttle by IP as defence in depth against automated probing.
+        RateLimiter::for('magic-verify', static fn (Request $request): Limit => Limit::perMinute(20)
             ->by($request->ip() ?? 'unknown'));
 
         RateLimiter::for('device-pairing', static fn (Request $request): Limit => Limit::perMinute(5)

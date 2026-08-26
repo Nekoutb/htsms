@@ -9,24 +9,16 @@ use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\DeviceHeartbeatController;
 use App\Http\Controllers\Api\V1\DeviceMessageController;
 use App\Http\Controllers\Api\V1\DevicePairingController;
-use App\Http\Controllers\Api\V1\EmailVerificationController;
 use App\Http\Controllers\Api\V1\InboundMessageController;
 use App\Http\Controllers\Api\V1\MessageController;
 use App\Http\Controllers\Api\V1\OrganizationController;
-use App\Http\Controllers\Api\V1\PasswordController;
 use App\Http\Controllers\Api\V1\WebhookEndpointController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1/auth')->group(function (): void {
     Route::post('/register', [AuthenticationController::class, 'register'])->middleware('throttle:auth-register');
-    Route::post('/login', [AuthenticationController::class, 'login'])->middleware('throttle:auth-login');
-    Route::post('/forgot-password', [PasswordController::class, 'forgot'])->middleware('throttle:password-reset');
-    Route::post('/reset-password', [PasswordController::class, 'reset'])->middleware('throttle:password-reset');
-    Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
-        ->middleware('signed')
-        ->name('verification.verify');
-    Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
-        ->middleware(['auth:sanctum', 'abilities:email:verify', 'throttle:6,1']);
+    Route::post('/login', [AuthenticationController::class, 'requestLink'])->middleware('throttle:auth-login');
+    Route::post('/magic-link', [AuthenticationController::class, 'requestLink'])->middleware('throttle:auth-login');
     Route::get('/me', [AuthenticationController::class, 'me'])
         ->middleware(['auth:sanctum', 'abilities:profile:read']);
     Route::delete('/logout', [AuthenticationController::class, 'logout'])

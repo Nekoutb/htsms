@@ -8,7 +8,6 @@ use App\Http\Controllers\Web\PortalController;
 use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\WebAuthenticationController;
 use App\Http\Controllers\Web\WebEmailVerificationController;
-use App\Http\Controllers\Web\WebPasswordResetController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -36,17 +35,18 @@ Route::get('/sitemap.xml', function (): Response {
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [WebAuthenticationController::class, 'loginForm'])->name('login');
     Route::post('/login', [WebAuthenticationController::class, 'login'])->middleware(['throttle:auth-login', 'turnstile']);
+    Route::get('/login/check-email', [WebAuthenticationController::class, 'linkSent'])->name('login.sent');
     Route::get('/register', [WebAuthenticationController::class, 'registerForm'])->name('register');
     Route::post('/register', [WebAuthenticationController::class, 'register'])->middleware(['throttle:auth-register', 'turnstile']);
-    Route::get('/forgot-password', [WebPasswordResetController::class, 'request'])->name('password.request');
-    Route::post('/forgot-password', [WebPasswordResetController::class, 'email'])->middleware('throttle:password-reset')->name('password.email');
-    Route::get('/reset-password/{token}', [WebPasswordResetController::class, 'reset'])->name('password.reset');
-    Route::post('/reset-password', [WebPasswordResetController::class, 'update'])->middleware('throttle:password-reset')->name('password.update');
 });
+
+// Single-use magic-link sign-in. The 256-bit token is throttled defensively.
+Route::get('/auth/magic/{token}', [WebAuthenticationController::class, 'verify'])
+    ->middleware('throttle:magic-verify')->name('magic.verify');
 
 Route::get('/email/verify', [WebEmailVerificationController::class, 'notice'])->name('verification.notice');
 Route::post('/email/verification-notification', [WebEmailVerificationController::class, 'resend'])
-    ->middleware('throttle:6,1')->name('verification.send');
+    ->middleware('throttle:auth-login')->name('verification.send');
 
 Route::post('/logout', [WebAuthenticationController::class, 'logout'])->middleware('auth')->name('logout');
 
@@ -81,7 +81,6 @@ Route::prefix('admin')->middleware(['auth', 'verified', 'platform-admin'])->grou
     Route::post('/users', [PlatformAdminController::class, 'storeUser'])->name('admin.users.store');
     Route::delete('/users/{user}', [PlatformAdminController::class, 'destroyUser'])->name('admin.users.destroy');
     Route::post('/admins', [PlatformAdminController::class, 'storeAdmin'])->name('admin.admins.store');
-    Route::put('/password', [PlatformAdminController::class, 'updatePassword'])->name('admin.password.update');
     Route::get('/organizations/{organization}/marketing', [MarketingController::class, 'index'])->name('admin.marketing');
     Route::post('/organizations/{organization}/marketing/contacts', [MarketingController::class, 'storeContact'])->name('portal.contacts.store');
     Route::post('/organizations/{organization}/marketing/campaigns', [MarketingController::class, 'storeCampaign'])->name('portal.campaigns.store');

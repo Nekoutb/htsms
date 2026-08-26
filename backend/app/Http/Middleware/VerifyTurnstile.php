@@ -21,7 +21,8 @@ final class VerifyTurnstile
     /** @param Closure(Request): Response $next */
     public function handle(Request $request, Closure $next): Response
     {
-        $secret = config()->string('services.turnstile.secret', '');
+        $secretValue = config('services.turnstile.secret');
+        $secret = is_string($secretValue) ? $secretValue : '';
         if ($secret === '') {
             return $next($request);
         }

@@ -20,11 +20,11 @@ try {
 
     await page.getByRole('link', { name: 'Sign in' }).click();
     await page.getByLabel('Email address').waitFor();
-    await page.getByLabel('Password').waitFor();
+    if (await page.locator('input[type=password]').count() > 0) throw new Error('Login page still exposes a password field');
 
     await page.goto(`${baseUrl}/register`, { waitUntil: 'networkidle' });
     await page.getByLabel('Work email').waitFor();
-    await page.locator('input[name="password"]').waitFor();
+    if (await page.locator('input[type=password]').count() > 0) throw new Error('Register page still exposes a password field');
 
     const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
     const mobileResponse = await mobile.goto(baseUrl, { waitUntil: 'networkidle' });
