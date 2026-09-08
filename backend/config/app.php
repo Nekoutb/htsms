@@ -30,6 +30,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Build Commit
+    |--------------------------------------------------------------------------
+    |
+    | The full Git SHA this release image was built from. It is baked into the
+    | image at build time so a running environment can report exactly which
+    | commit it serves, rather than that being inferred from a deploy log.
+    |
+    */
+
+    'commit' => env('HTSMS_COMMIT', 'unknown'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
     |

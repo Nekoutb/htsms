@@ -26,5 +26,10 @@ COPY deploy/docker/php.ini /usr/local/etc/php/conf.d/htsms.ini
 COPY deploy/docker/entrypoint.sh /usr/local/bin/htsms-entrypoint
 RUN chmod +x /usr/local/bin/htsms-entrypoint \
     && chown -R www-data:www-data storage bootstrap/cache
+# Declared last so a new commit does not invalidate the cache for the
+# expensive dependency and asset layers above.
+ARG HTSMS_COMMIT=unknown
+ENV HTSMS_COMMIT=${HTSMS_COMMIT}
+
 ENTRYPOINT ["htsms-entrypoint"]
 CMD ["php-fpm", "-F"]

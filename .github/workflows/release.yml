@@ -33,6 +33,8 @@ jobs:
           context: .
           file: deploy/docker/Dockerfile
           push: true
+          build-args: |
+            HTSMS_COMMIT=${{ github.sha }}
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
           cache-from: type=gha

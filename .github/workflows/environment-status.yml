@@ -1,0 +1,107 @@
+name: Environment status
+
+# Records what each environment is actually serving. The commit is read back
+# from the live /health/ready endpoint, so this reflects reality rather than
+# what a deploy log claims was shipped.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Daily, so drift between an environment and its recorded state surfaces
+    # without anyone having to remember to look.
+    - cron: '17 6 * * *'
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: environment-status
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Probe every environment
+        id: probe
+        run: |
+          chmod +x scripts/environment-status.sh
+          # The script exits non-zero when an environment is not ready, which
+          # is information to record rather than a reason to abort the job.
+          set +e
+          ./scripts/environment-status.sh --markdown > status.md
+          echo "ready=$?" >> "$GITHUB_OUTPUT"
+          set -e
+          cat status.md
+
+      - name: Publish summary
+        run: |
+          {
+            echo "## HTSMS environments"
+            echo
+            cat status.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record deployments
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const targets = [
+              { environment: 'production', url: 'https://htsms.cm-ea.com' },
+              { environment: 'staging', url: 'https://dev.htsms.cm-ea.com' },
+            ];
+
+            for (const target of targets) {
+              let body;
+              try {
+                const response = await fetch(`${target.url}/health/ready`);
+                body = await response.json();
+              } catch (error) {
+                core.warning(`${target.environment} is unreachable: ${error.message}`);
+                continue;
+              }
+
+              // Older images predate the commit field, and a deployment can
+              // only be created against a ref that exists in this repository.
+              const sha = body.commit;
+              if (!/^[0-9a-f]{40}$/.test(sha ?? '')) {
+                core.warning(
+                  `${target.environment} reports commit "${sha}" — not a full SHA, skipping.`
+                );
+                continue;
+              }
+
+              try {
+                await github.rest.repos.getCommit({
+                  ...context.repo,
+                  ref: sha,
+                });
+              } catch {
+                core.warning(`${target.environment} commit ${sha} is not in this repository.`);
+                continue;
+              }
+
+              const deployment = await github.rest.repos.createDeployment({
+                ...context.repo,
+                ref: sha,
+                environment: target.environment,
+                description: `Observed via ${target.url}/health/ready`,
+                auto_merge: false,
+                required_contexts: [],
+                transient_environment: false,
+              });
+
+              await github.rest.repos.createDeploymentStatus({
+                ...context.repo,
+                deployment_id: deployment.data.id,
+                state: body.status === 'ready' ? 'success' : 'failure',
+                environment_url: target.url,
+                description: `Serving ${sha.slice(0, 7)}`,
+              });
+
+              core.info(`${target.environment}: recorded ${sha.slice(0, 7)} at ${target.url}`);
+            }

@@ -20,9 +20,17 @@ final class HealthController extends Controller
                 throw new \RuntimeException('Cache check failed.');
             }
 
-            return response()->json(['status' => 'ready']);
+            return response()->json([
+                'status' => 'ready',
+                'environment' => (string) config('app.env'),
+                'commit' => (string) config('app.commit'),
+            ]);
         } catch (Throwable) {
-            return response()->json(['status' => 'unavailable'], 503);
+            return response()->json([
+                'status' => 'unavailable',
+                'environment' => (string) config('app.env'),
+                'commit' => (string) config('app.commit'),
+            ], 503);
         }
     }
 }

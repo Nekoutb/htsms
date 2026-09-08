@@ -1,0 +1,46 @@
+# HTSMS staging override.
+#
+# Runs a second, fully isolated stack alongside production on the same host.
+# Isolation comes from the Compose project name below: containers, networks,
+# and volumes are all namespaced under "htsms-staging", so staging gets its
+# own PostgreSQL and Redis data and can never read or write production's.
+#
+# Production's bundled Caddy owns host ports 80/443, so staging must not
+# publish them. Instead staging publishes Nginx on the loopback interface
+# only, and the host's reverse proxy terminates TLS for dev.htsms.cm-ea.com
+# and forwards to it. See docs/DEPLOYMENT.md.
+#
+#   docker compose \
+#     --env-file .env.staging \
+#     -f compose.production.yml \
+#     -f compose.staging.yml \
+#     up -d
+#
+name: htsms-staging
+
+services:
+  # The private network is internal, so services that need outbound access
+  # (SMTP, Turnstile, webhook delivery) are also attached to the public one.
+  app:
+    networks: [private, public]
+
+  queue:
+    networks: [private, public]
+
+  webhooks:
+    networks: [private, public]
+
+  scheduler:
+    networks: [private, public]
+
+  nginx:
+    networks: [private, public]
+    # Must stay bound to 127.0.0.1: the host proxy is the only intended
+    # entry point, and staging should never be reachable directly.
+    ports:
+      - "127.0.0.1:${HTSMS_HTTP_PORT:-8086}:80"
+
+  # Production's Caddy already holds 80/443 on this host. Assigning a profile
+  # keeps this service from starting unless it is explicitly requested.
+  caddy:
+    profiles: [bundled-proxy]

@@ -1,0 +1,43 @@
+# Host Caddy configuration when production and staging share one machine.
+#
+# Install as /etc/caddy/Caddyfile on the host, validate, then reload:
+#
+#   sudo caddy validate --config /etc/caddy/Caddyfile
+#   sudo systemctl reload caddy
+#
+# This replaces the bundled per-stack Caddy. Both Compose stacks must then
+# run with their loopback overrides so neither tries to claim ports 80/443:
+#   production -> compose.external-caddy.yml on 127.0.0.1:8085
+#   staging    -> compose.staging.yml        on 127.0.0.1:8086
+#
+# Keep each Cloudflare DNS record in DNS-only mode until Caddy has obtained a
+# certificate and the site answers over HTTPS directly. Only then switch the
+# record to Full (strict) and enable the proxy.
+
+htsms.cm-ea.com {
+	reverse_proxy 127.0.0.1:8085
+	encode zstd gzip
+	header {
+		-Server
+	}
+	log {
+		output file /var/log/caddy/htsms-production.log
+		format json
+	}
+}
+
+dev.htsms.cm-ea.com {
+	reverse_proxy 127.0.0.1:8086
+	encode zstd gzip
+	header {
+		-Server
+		# Staging must never be indexed: it serves real-looking pages on a
+		# public hostname, and duplicate content would compete with the
+		# production site in search results.
+		X-Robots-Tag "noindex, nofollow"
+	}
+	log {
+		output file /var/log/caddy/htsms-staging.log
+		format json
+	}
+}

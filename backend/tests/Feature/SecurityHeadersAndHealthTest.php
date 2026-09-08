@@ -22,6 +22,21 @@ final class SecurityHeadersAndHealthTest extends TestCase
 
     public function test_readiness_checks_database_and_cache(): void
     {
-        $this->getJson('/health/ready')->assertOk()->assertExactJson(['status' => 'ready']);
+        config(['app.commit' => 'a1b2c3d4']);
+
+        $this->getJson('/health/ready')->assertOk()->assertExactJson([
+            'status' => 'ready',
+            'environment' => (string) config('app.env'),
+            'commit' => 'a1b2c3d4',
+        ]);
+    }
+
+    public function test_readiness_reports_the_deployed_commit(): void
+    {
+        config(['app.commit' => 'deadbeefcafe']);
+
+        $this->getJson('/health/ready')
+            ->assertOk()
+            ->assertJsonPath('commit', 'deadbeefcafe');
     }
 }

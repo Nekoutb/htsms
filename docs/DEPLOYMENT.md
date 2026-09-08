@@ -70,6 +70,86 @@ The application service runs migrations before serving. Queue and scheduler serv
 
 Merges to `main` publish `ghcr.io/nekoutb/htsms:sha-<full-commit-sha>` and `latest`; version tags such as `v1.0.0` also publish that version. Production should pin the immutable SHA tag after its release checks pass.
 
+## Staging environment
+
+Staging runs at `https://dev.htsms.cm-ea.com` as a second Compose stack on the
+production host. Isolation comes from the Compose project name `htsms-staging`,
+which namespaces every container, network, and volume, so staging has its own
+PostgreSQL and Redis and cannot reach production's data.
+
+Because the two stacks share a machine, staging is not a capacity test: a
+runaway staging job competes with live traffic for CPU, memory, and disk.
+
+### Ports
+
+Production's bundled Caddy owns host ports 80 and 443, so staging must never
+publish them. Each stack binds Nginx to the loopback interface only, and the
+host reverse proxy terminates TLS for both hostnames:
+
+| Environment | Hostname | Loopback port |
+| --- | --- | --- |
+| production | `htsms.cm-ea.com` | `127.0.0.1:8085` |
+| staging | `dev.htsms.cm-ea.com` | `127.0.0.1:8086` |
+
+Install `Caddyfile.host.example` as the host Caddy configuration to serve both.
+
+### First staging deployment
+
+1. Add a DNS record for `dev.htsms.cm-ea.com` pointing at the host. Keep it in
+   Cloudflare DNS-only mode until Caddy has issued a certificate.
+2. Copy `deploy/.env.staging.example` to `deploy/.env.staging` and `chmod 600`.
+3. Generate an `APP_KEY` and PostgreSQL and Redis passwords that are all
+   independent of production's. Staging shares a host with the live service, so
+   a reused credential turns a staging compromise into a production one.
+4. Leave `MAIL_MAILER=log` unless a sending domain and recipient allowlist have
+   been set up specifically for staging. Staging must not email real customers.
+5. Pin `HTSMS_IMAGE` to an immutable `sha-<full-commit-sha>` tag.
+6. Start the stack:
+
+```bash
+cd deploy
+docker compose \
+  --env-file .env.staging \
+  -f compose.production.yml \
+  -f compose.staging.yml \
+  up -d
+```
+
+7. Confirm the environment reports itself correctly:
+
+```bash
+curl --fail https://dev.htsms.cm-ea.com/health/ready
+```
+
+### Promoting a change to staging
+
+```bash
+cd deploy
+HTSMS_IMAGE=ghcr.io/nekoutb/htsms:sha-<full-commit-sha> \
+docker compose \
+  --env-file .env.staging \
+  -f compose.production.yml \
+  -f compose.staging.yml \
+  up -d
+```
+
+Every push to `main` publishes `sha-<full-commit-sha>`. To stage a branch before
+merging, run the `HTSMS release image` workflow on that branch first.
+
+### Reading back what is deployed
+
+`/health/ready` reports the exact commit each environment is serving, baked into
+the image at build time via the `HTSMS_COMMIT` build argument. To see every
+environment at once:
+
+```bash
+./scripts/environment-status.sh
+```
+
+The `Environment status` workflow runs the same probe on a schedule and records
+the result against the GitHub environments, so the deployment history reflects
+what is actually serving rather than what a deploy log claimed.
+
 ## Release, rollback, and recovery
 
 Before release, back up PostgreSQL and record the current image digest. Rehearse migrations in staging, then deploy the immutable image. Roll back to the previous digest. If a schema change is not backward-compatible, restore the pre-release backup into an isolated instance first; never run destructive rollback commands blindly in production.

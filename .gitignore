@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 !deploy/.env.production.example
+!deploy/.env.staging.example
 backend/.env
 
 # PHP dependencies and generated files
